@@ -1,0 +1,4 @@
+-- SAMPLE INSERT WITH ENCRYPTION
+INSERT INTO users (username, email, password)
+    VALUES ("tarazonaa", pgp_sym_encrypt("someemail@gmail.com", "SOME_SALT"), pgp_sym_encrypt("123", "SOME_SALT"));
+
