@@ -1,20 +1,23 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import LoginPage from '@/pages/LoginPage';
-import Dashboard from '@/pages/Dashboard';
+import type React from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import LoginPage from '@/pages/LoginPage'
+import Dashboard from '@/pages/Dashboard'
+import './i18n/config'
+import { LanguageWrapper } from './LanguageWrapper'
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-};
-
+  const { isAuthenticated } = useAuth()
+  const { lng = 'en' } = useParams()
+  return isAuthenticated ? <>{children}</> : <Navigate to={`/${lng}/login`} replace />
+}
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/dashboard" replace />;
-};
+  const { isAuthenticated } = useAuth()
+  const { lng = 'en' } = useParams()
+  return !isAuthenticated ? <>{children}</> : <Navigate to={`/${lng}/dashboard`} replace />
+}
 
 const App: React.FC = () => {
   return (
@@ -22,28 +25,40 @@ const App: React.FC = () => {
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Routes>
-            <Route 
-              path="/login" 
+            <Route
+              path="/:lng/login"
               element={
-                <PublicRoute>
-                  <LoginPage />
-                </PublicRoute>
-              } 
+                <LanguageWrapper>
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                </LanguageWrapper>
+              }
             />
-            <Route 
-              path="/dashboard" 
+            <Route
+              path="/:lng/dashboard"
               element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
+                <LanguageWrapper>
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                </LanguageWrapper>
+              }
             />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route
+              path="/"
+              element={
+                <Navigate
+                  to={`/${navigator.language.startsWith('es') ? 'es' : 'en'}/dashboard`}
+                  replace
+                />
+              }
+            />
           </Routes>
         </div>
       </Router>
     </AuthProvider>
-  );
-};
+  )
+}
 
-export default App;
+export default App
