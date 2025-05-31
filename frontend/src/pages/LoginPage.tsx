@@ -22,9 +22,10 @@ function Login() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
+
     <div className="min-h-screen bg-gradient-to-br from-primary-light via-secondary to-accent">
       <motion.div 
         className="min-h-screen flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8 backdrop-blur-sm"
@@ -61,7 +62,9 @@ function Login() {
                   Sign in to continue to your account
                 </p>
               </motion.div>
+
             </div>
+
 
             <AnimatePresence mode="wait">
               {error && (
@@ -99,6 +102,7 @@ function Login() {
                   placeholder="Enter your email"
                   disabled={isLoading}
                 />
+
               </div>
 
               <div className="space-y-2">
