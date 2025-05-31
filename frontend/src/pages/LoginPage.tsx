@@ -1,42 +1,47 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import type React from 'react'
+import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useTranslation } from 'react-i18next'
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { login } = useAuth()
+  const { t } = useTranslation()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
     try {
-      const success = await login(email, password);
+      const success = await login(email, password)
       if (!success) {
-        setError('Invalid email or password');
+        setError('Invalid email or password')
       }
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError('Login failed. Please try again.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-purple-500 to-purple-700 px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your account</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {t('title', { name: 'Placeholder' })}
+          </h1>
+          <p className="text-gray-600">{t('sign_in')}</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
+              {t('email_address')}
             </label>
             <input
               type="email"
@@ -49,10 +54,10 @@ const LoginPage: React.FC = () => {
               placeholder="Enter your email"
             />
           </div>
-          
+
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
+              {t('password')}
             </label>
             <input
               type="password"
@@ -79,8 +84,8 @@ const LoginPage: React.FC = () => {
           >
             {loading ? (
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Signing in...
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                {t('signing_in')}
               </div>
             ) : (
               'Sign In'
@@ -89,7 +94,7 @@ const LoginPage: React.FC = () => {
         </form>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoginPage;
+export default LoginPage

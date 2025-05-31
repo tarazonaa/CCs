@@ -1,0 +1,11 @@
+{
+  "title": "Welcome {{name}}",
+  "sign_in": "Please sign in to your account",
+  "email_address": "Email address",
+  "password": "Password",
+  "invalid_credentials": "Invalid email or password",
+  "login_failed": "Login failed. Please try again.",
+  "signing_in": "Signing in...",
+  "sign_in_button": "Sign In",
+  "welcome_back": "Welcome Back"
+}
