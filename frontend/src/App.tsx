@@ -1,34 +1,63 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import type React from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import LoginPage from '@/pages/LoginPage'
+import Dashboard from '@/pages/Dashboard'
+import './i18n/config'
+import { LanguageWrapper } from './LanguageWrapper'
 
-function App() {
-  const [count, setCount] = useState(0)
+// Protected Route Component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth()
+  const { lng = 'en' } = useParams()
+  return isAuthenticated ? <>{children}</> : <Navigate to={`/${lng}/login`} replace />
+}
 
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth()
+  const { lng = 'en' } = useParams()
+  return !isAuthenticated ? <>{children}</> : <Navigate to={`/${lng}/dashboard`} replace />
+}
+
+const App: React.FC = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          <Routes>
+            <Route
+              path="/:lng/login"
+              element={
+                <LanguageWrapper>
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                </LanguageWrapper>
+              }
+            />
+            <Route
+              path="/:lng/dashboard"
+              element={
+                <LanguageWrapper>
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                </LanguageWrapper>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <Navigate
+                  to={`/${navigator.language.startsWith('es') ? 'es' : 'en'}/dashboard`}
+                  replace
+                />
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   )
 }
 
