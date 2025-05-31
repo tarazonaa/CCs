@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // TODO: Replace with actual API call to your Go backend
+      // TODO: Remplazzar con nuestro api de auth
       // const response = await fetch('/api/login', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
