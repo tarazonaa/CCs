@@ -19,9 +19,7 @@ services:
           - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
           - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql
           - ./views.sql:/docker-entrypoint-initdb.d/views.sql
-        environment:
-          - POSTGRES_DB=example
-          - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+        env_file: .env
         ports:
           - 5432:5432
         healthcheck:
@@ -50,16 +48,11 @@ services:
           restart: always
           ports:
             - 27017:27017
-          environment: 
-            MONGO_INITDB_ROOT_USERNAME: /run/secrets/mongo-user
-            MONGO_INITDB_ROOT_PASSWORD: /run/secrets/mongo-password
+          env_file: .env
+
 volumes:
   db-data:
   minio-data:
 secrets:
   db-password:
     file: password.txt
-  mongo-user:
-    file: mongo-user.txt
-  mongo-password:
-    file: mongo-password.txt
