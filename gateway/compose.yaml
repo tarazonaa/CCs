@@ -1,0 +1,12 @@
+services:
+  kong:
+    image: kong:3.6
+    container_name: cc-gateway
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+    volumes:
+      - ./config/kong.conf:/etc/kong/kong.conf.default:ro
+    environment:
+      - KONG_DATABASE=off
+    restart: unless-stopped
