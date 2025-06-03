@@ -16,3 +16,32 @@ CREATE TABLE images (
     created_at timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE consumers (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
+    username varchar(255) UNIQUE,
+    custom_id varchar(255) UNIQUE,
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE oauth2_credentials (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
+    name varchar(255) NOT NULL,
+    client_id varchar(255) UNIQUE NOT NULL,
+    client_secret varchar(255) NOT NULL,
+    redirect_uris text[], -- Array de URLs
+    consumer_id uuid NOT NULL REFERENCES consumers (id),
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE oauth2_tokens (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
+    access_token varchar(512) UNIQUE NOT NULL,
+    refresh_token varchar(512) UNIQUE,
+    token_type varchar(50) DEFAULT 'bearer',
+    expires_in integer,
+    scope text,
+    authenticated_userid varchar(255),
+    credential_id uuid NOT NULL REFERENCES oauth2_credentials (id),
+    created_at bigint
+);
+
