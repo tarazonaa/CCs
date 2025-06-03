@@ -16,4 +16,3 @@ SELECT
 FROM
     users u
     JOIN images image ON u.id = image.user_id;
-
