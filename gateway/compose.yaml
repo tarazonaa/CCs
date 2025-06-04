@@ -17,7 +17,8 @@ services:
     restart: unless-stopped
   
   logger:
-    build: ./logger
+    # build: ./logger
+    image: joaquinbadillo/logger
     container_name: cc-logger
     ports:
       - "8080:8080"
@@ -26,6 +27,9 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+    # Development only
+    environment:
+      - MONGODB_URI=mongodb://dev:dev@db:27017
 
   db:
     image: mongo
@@ -35,6 +39,10 @@ services:
       - "27017:27017"
     networks:
       - cloud-demo
+    # Development only
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=dev
+      - MONGO_INITDB_ROOT_PASSWORD=dev
   
   hello:
     build:
