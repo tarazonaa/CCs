@@ -14,6 +14,13 @@ services:
     networks:
       - cloud-demo
     restart: unless-stopped
+  
+  logger:
+    build: ./logger
+    container_name: cc-logger
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
 
   hello:
     build:
@@ -40,3 +47,4 @@ services:
 networks:
   cloud-demo:
     driver: bridge
+
