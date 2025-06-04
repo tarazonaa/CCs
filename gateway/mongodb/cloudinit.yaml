@@ -1,0 +1,20 @@
+#cloud-config
+ssh_pwauth: true
+preserve_hostname: false
+hostname: cclogdb
+
+users:
+  - name: $USERNAME
+    plain_text_passwd: $PASSWORD
+    no_user_group: true
+    groups: sudo, adm
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - $SSH_PUBLIC_KEY
+ssh_deletekeys: false
+
+chpasswd:
+  list: |
+    $USERNAME:$PASSWORD
+  expire: False

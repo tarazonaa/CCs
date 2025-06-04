@@ -15,3 +15,13 @@ services:
       - name: hello-route
         paths:
           - /hello
+
+plugins:
+- name: http-log
+  config:
+    http_endpoint: http://logger:8080/logs
+    method: POST
+    timeout: 1000
+    keepalive: 1000
+    flush_timeout: 2
+    retry_count: 15
