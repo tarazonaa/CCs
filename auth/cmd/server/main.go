@@ -70,6 +70,7 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 		oauth2Group.POST("/token", oauth2Handler.OAuth2Token)
 		oauth2Group.Any("/tokens", oauth2Handler.OAuth2Tokens)
 		oauth2Group.Any("/tokens/:token_id", oauth2Handler.OAuth2TokenByID)
+		oauth2Group.POST("/introspect", oauth2Handler.IntrospectToken)
 	}
 
 	authGroup := router.Group("/auth")

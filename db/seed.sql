@@ -16,3 +16,9 @@ INSERT INTO images (user_id, sent_image_id, received_image_id)
         FROM users
         WHERE
             username = 'tarazonaa'), gen_random_uuid (), gen_random_uuid ());
+
+INSERT INTO consumers (id, username, custom_id)
+    VALUES (gen_random_uuid (), 'test-consumer', 'consumer123')
+ON CONFLICT
+    DO NOTHING;
+

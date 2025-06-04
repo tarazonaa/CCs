@@ -10,6 +10,7 @@ import (
 	"auth-service/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -25,6 +26,59 @@ func NewOAuth2Handler(oauth2Service *services.OAuth2Service, db *gorm.DB, cfg *c
 		db:            db,
 		config:        cfg,
 	}
+}
+
+// Function to handle introspection (check if the token is valid)
+func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
+	var req struct {
+		Token string `json:"token" binding: "required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"active": false, "error": "missing token"})
+		return
+	}
+
+	var token models.OAuth2Token
+	if err := h.db.Preload("Credential").Where("access_token = ?", req.Token).First(&token).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{"active": false})
+		return
+	}
+
+	if token.IsExpired() {
+		c.JSON(http.StatusOK, gin.H{
+			"active":  false,
+			"refresh": true,
+		})
+		return
+	}
+
+	// Get the user from DB
+	userUUID, err := uuid.Parse(token.AuthenticatedUserID)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"active": false,
+		})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("id = ?", userUUID).First(&user).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"active": false,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"active":        true,
+		"username":      user.Username,
+		"email":         user.Email,
+		"client_id":     token.Credential.ClientID,
+		"refresh_token": token.RefreshToken,
+		"scope":         token.Scope,
+		"exp":           token.ExpiresIn,
+	})
 }
 
 func (h *OAuth2Handler) OAuth2Authorize(c *gin.Context) {

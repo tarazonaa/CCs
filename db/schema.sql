@@ -45,3 +45,17 @@ CREATE TABLE oauth2_tokens (
     created_at bigint
 );
 
+CREATE TABLE authorization_codes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
+    code varchar(255) UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+    client_id varchar(255) NOT NULL,
+    user_id uuid NOT NULL REFERENCES users (id),
+    redirect_uri text NOT NULL,
+    scopes text[],
+    code_challenge varchar(255),
+    code_challenge_method varchar(50),
+    is_used boolean DEFAULT FALSE,
+    expires_at timestamp NOT NULL,
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP
+);
+

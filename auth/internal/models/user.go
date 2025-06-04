@@ -2,14 +2,17 @@ package models
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
+	ID        uuid.UUID `json:"id" gorm:"primaryKey"`
 	Email     string    `json:"email" gorm:"uniqueIndex;not null"`
 	Password  string    `json:"-" gorm:"not null"`
 	Name      string    `json:"name" gorm:"not null"`
+	Username  string    `json:"username" gorm:"uniqueIndex;not null"`
 	IsActive  bool      `json:"is_active" gorm:"default:true"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
