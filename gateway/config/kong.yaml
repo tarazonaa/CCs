@@ -1,0 +1,17 @@
+_format_version: "3.0"
+
+upstreams:
+  - name: hello-upstream
+    algorithm: round-robin
+    targets:
+      - target: hello:8000 # Change to IP in cloud
+      - target: hello-copy:8000 # Change to IP in cloud
+
+services:
+  - name: hello-service
+    host: hello-upstream
+    port: 8000
+    routes:
+      - name: hello-route
+        paths:
+          - /hello

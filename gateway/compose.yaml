@@ -7,6 +7,36 @@ services:
       - "8443:8443"
     volumes:
       - ./config/kong.conf:/etc/kong/kong.conf.default:ro
+      - ./config/kong.yaml:/etc/kong/kong.yaml:ro
     environment:
       - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/etc/kong/kong.yaml
+    networks:
+      - cloud-demo
     restart: unless-stopped
+
+  hello:
+    build:
+      context: ./hello-world
+      dockerfile: Dockerfile
+    container_name: hello
+    expose:
+      - "8000"
+    networks:
+      - cloud-demo
+    restart: unless-stopped
+  
+  hello-copy:
+    build:
+      context: ./hello-world
+      dockerfile: Dockerfile
+    container_name: hello-copy
+    expose:
+      - "8000"
+    networks:
+      - cloud-demo
+    restart: unless-stopped  
+
+networks:
+  cloud-demo:
+    driver: bridge
