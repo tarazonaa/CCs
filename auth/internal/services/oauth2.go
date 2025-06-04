@@ -55,6 +55,7 @@ type TokenRequest struct {
 	AuthenticatedUserID string `json:"authenticated_userid" form:"authenticated_userid"`
 	Username            string `json:"username" form:"username"`
 	Password            string `json:"password" form:"password"`
+	Email               string `json:"email" form:"email"`
 }
 
 type AuthorizeResponse struct {
@@ -284,12 +285,12 @@ func (s *OAuth2Service) handlePasswordGrant(req *TokenRequest) (*TokenResponse, 
 		return nil, errors.New("password grant flow is disabled")
 	}
 
-	if req.Username == "" || req.Password == "" {
+	if req.Email == "" || req.Password == "" {
 		return nil, errors.New("missing username or password")
 	}
 
 	var user models.User
-	if err := s.db.Where("email = ?", req.Username).First(&user).Error; err != nil {
+	if err := s.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 

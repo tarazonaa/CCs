@@ -5,6 +5,7 @@ CREATE TABLE users (
     email varchar(250) UNIQUE NOT NULL,
     username varchar(50) UNIQUE NOT NULL,
     password TEXT NOT NULL,
+    is_active boolean DEFAULT TRUE,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP
 );
 

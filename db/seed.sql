@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Insert a test user with encrypted email and password
 INSERT INTO users (id, username, email, password)
-    VALUES (gen_random_uuid (), 'tarazonaa', 'andres.tara.so@gmail.com', pgp_sym_encrypt('123', 'SOME_PASSWORD'))
+    VALUES (gen_random_uuid (), 'tarazonaa', 'andres.tara.so@gmail.com', '$2a$12$RhlrMmyvcM0En8PeNOINJus0lE3WKIaRlVD/BTfThF0pqpVYUpKZm')
 ON CONFLICT (username)
     DO NOTHING;
 
@@ -37,7 +37,7 @@ INSERT INTO oauth2_credentials (id, name, client_id, client_secret, redirect_uri
             FROM
                 consumers
             WHERE
-                custom_id = 'consumer123'))
+                custom_id = 'ccs-id'))
 ON CONFLICT (client_id)
     DO NOTHING;
 
