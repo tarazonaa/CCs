@@ -1,0 +1,38 @@
+_format_version: "3.0"
+
+upstreams:
+  - name: frontend-upstream
+    algorithm: round-robin
+    targets:
+      - target: 172.24.0.136:80
+
+  - name: inference-upstream
+    algorithm: round-robin
+    targets:
+      - target: 172.24.0.9:8000
+
+services:
+  - name: frontend-service
+    host: frontend-upstream
+    port: 80
+    routes:
+      - name: frontend-route
+        paths:
+          - /
+  - name: inference-service
+    host: inference-upstream
+    port: 8000
+    routes:
+      - name: inference-route
+        paths:
+          - /api/v1/inference
+
+plugins:
+- name: http-log
+  config:
+    http_endpoint: http://172.24.0.130:8080/logs
+    method: POST
+    timeout: 1000
+    keepalive: 1000
+    flush_timeout: 2
+    retry_count: 15
