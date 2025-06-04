@@ -4,6 +4,7 @@ services:
     container_name: cc-gateway
     ports:
       - "8000:8000"
+      - "8001:8001"
       - "8443:8443"
     volumes:
       - ./config/kong.conf:/etc/kong/kong.conf.default:ro
@@ -14,13 +15,27 @@ services:
     networks:
       - cloud-demo
     restart: unless-stopped
+  
   logger:
     build: ./logger
     container_name: cc-logger
     ports:
       - "8080:8080"
+    networks:
+      - cloud-demo
     restart: unless-stopped
+    depends_on:
+      - db
 
+  db:
+    image: mongo
+    container_name: cc-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    networks:
+      - cloud-demo
+  
   hello:
     build:
       context: ./hello-world
