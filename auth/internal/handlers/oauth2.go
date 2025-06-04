@@ -8,6 +8,7 @@ import (
 	"auth-service/internal/config"
 	"auth-service/internal/models"
 	"auth-service/internal/services"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -82,7 +83,7 @@ func (h *OAuth2Handler) OAuth2Token(c *gin.Context) {
 	if err != nil {
 		status := http.StatusBadRequest
 		errorCode := "invalid_request"
-		
+
 		switch {
 		case strings.Contains(err.Error(), "invalid client"):
 			errorCode = "invalid_client"
@@ -94,7 +95,7 @@ func (h *OAuth2Handler) OAuth2Token(c *gin.Context) {
 		case strings.Contains(err.Error(), "invalid scope"):
 			errorCode = "invalid_scope"
 		}
-		
+
 		h.sendTokenError(c, errorCode, err.Error(), status)
 		return
 	}
@@ -136,12 +137,12 @@ func (h *OAuth2Handler) OAuth2TokenByID(c *gin.Context) {
 
 func (h *OAuth2Handler) listTokens(c *gin.Context) {
 	var tokens []models.OAuth2Token
-	
+
 	query := h.db.Preload("Credential")
 	if serviceID := c.Query("service_id"); serviceID != "" {
 		query = query.Where("service_id = ?", serviceID)
 	}
-	
+
 	if err := query.Find(&tokens).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch tokens"})
 		return

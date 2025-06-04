@@ -3,13 +3,14 @@ package services
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
-	"log"
 	"time"
 
 	"auth-service/internal/config"
 	"auth-service/internal/models"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -69,13 +70,13 @@ type TokenResponse struct {
 func (s *OAuth2Service) Authorize(req *AuthorizeRequest) (*AuthorizeResponse, error) {
 	log.Printf("DEBUG: Received provision_key: '%s'", req.ProvisionKey)
 	log.Printf("DEBUG: Expected provision_key: '%s'", s.config.ProvisionKey)
-	
+
 	// Validate provision key
 	if req.ProvisionKey != s.config.ProvisionKey {
 		return nil, errors.New("invalid provision key")
 	}
 
-	var app models.OAuth2Application
+	var app models.OAuth2Credential
 	if err := s.db.Where("client_id = ?", req.ClientID).First(&app).Error; err != nil {
 		return nil, errors.New("invalid client")
 	}
@@ -94,12 +95,11 @@ func (s *OAuth2Service) Authorize(req *AuthorizeRequest) (*AuthorizeResponse, er
 	}
 }
 
-func (s *OAuth2Service) handleAuthorizationCodeFlow(req *AuthorizeRequest, app *models.OAuth2Application) (*AuthorizeResponse, error) {
+func (s *OAuth2Service) handleAuthorizationCodeFlow(req *AuthorizeRequest, app *models.OAuth2Credential) (*AuthorizeResponse, error) {
 	if !s.config.OAuth2.EnableAuthorizationCode {
 		return nil, errors.New("authorization code flow is disabled")
 	}
 
-	
 	if s.config.OAuth2.PKCERequired && req.CodeChallenge == "" {
 		return nil, errors.New("PKCE is required")
 	}
@@ -118,7 +118,6 @@ func (s *OAuth2Service) handleAuthorizationCodeFlow(req *AuthorizeRequest, app *
 		return nil, fmt.Errorf("failed to create authorization code: %w", err)
 	}
 
-
 	redirectURL, _ := url.Parse(req.RedirectURI)
 	query := redirectURL.Query()
 	query.Set("code", authCode.Code)
@@ -132,7 +131,7 @@ func (s *OAuth2Service) handleAuthorizationCodeFlow(req *AuthorizeRequest, app *
 	}, nil
 }
 
-func (s *OAuth2Service) handleImplicitFlow(req *AuthorizeRequest, app *models.OAuth2Application) (*AuthorizeResponse, error) {
+func (s *OAuth2Service) handleImplicitFlow(req *AuthorizeRequest, app *models.OAuth2Credential) (*AuthorizeResponse, error) {
 	if !s.config.OAuth2.EnableImplicitGrant {
 		return nil, errors.New("implicit grant flow is disabled")
 	}
@@ -183,7 +182,7 @@ func (s *OAuth2Service) Token(req *TokenRequest) (*TokenResponse, error) {
 }
 
 func (s *OAuth2Service) handleAuthorizationCodeGrant(req *TokenRequest) (*TokenResponse, error) {
-	var app models.OAuth2Application
+	var app models.OAuth2Credential
 	if err := s.validateClient(req.ClientID, req.ClientSecret, &app); err != nil {
 		return nil, err
 	}
@@ -220,14 +219,14 @@ func (s *OAuth2Service) handleClientCredentialsGrant(req *TokenRequest) (*TokenR
 	}
 
 	// Validate client credentials
-	var app models.OAuth2Application
+	var app models.OAuth2Credential
 	if err := s.validateClient(req.ClientID, req.ClientSecret, &app); err != nil {
 		return nil, err
 	}
 	return s.createTokenResponse(&app, 0, req.Scope)
 }
 
-func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *models.OAuth2Application) error {
+func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *models.OAuth2Credential) error {
 	if err := s.db.Where("client_id = ?", clientID).First(app).Error; err != nil {
 		return errors.New("invalid client")
 	}
@@ -239,13 +238,13 @@ func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *model
 	return nil
 }
 
-func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Application, userID uint, scope string) (*TokenResponse, error) {
+func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID uint, scope string) (*TokenResponse, error) {
 	// Create access token
 	accessToken := &models.OAuth2Token{
-		TokenType:           "bearer",
-		ExpiresIn:           s.config.OAuth2.AccessTokenExpiration,
-		Scope:               scope,
-		CredentialID:        app.ID,
+		TokenType:    "bearer",
+		ExpiresIn:    s.config.OAuth2.AccessTokenExpiration,
+		Scope:        scope,
+		CredentialID: app.ID,
 	}
 
 	if userID > 0 {
@@ -292,14 +291,13 @@ func (s *OAuth2Service) isValidRedirectURI(uri string, validURIs []string) bool 
 }
 
 func (s *OAuth2Service) parseUserID(userIDStr string) uint {
-	
+
 	if userIDStr == "" {
 		return 0
 	}
-	
+
 	return 1 // Placeholder
 }
-
 
 func (s *OAuth2Service) handleRefreshTokenGrant(req *TokenRequest) (*TokenResponse, error) {
 	// Implementation for refresh token grant
