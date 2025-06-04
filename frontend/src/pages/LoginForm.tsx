@@ -109,7 +109,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ switchToSignup }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{8,}$"
+            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@!#$%^&*])[A-Za-z\d@!#$%^&*]{8,}$"
             className="peer block w-full invalid:[&:not(:placeholder-shown):not(:focus)]:border-red-500 rounded-lg border border-border bg-surface/50 px-4 py-3 text-text-primary placeholder:text-text-secondary/60 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
             placeholder="*********************"
             disabled={isLoading}

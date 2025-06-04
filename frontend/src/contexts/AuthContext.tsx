@@ -1,6 +1,10 @@
 // contexts/AuthContext.tsx
+import axios from 'axios'
+import { randomUUID } from 'node:crypto'
 import type React from 'react'
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+
+const authEndpoint = process.env.AUTH_ENDPOINT
 
 interface User {
   id: string
@@ -62,22 +66,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // TODO: Remplazzar con nuestro api de auth
-      // const response = await fetch('/api/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password })
-      // });
-
-      // Simulate login for now
       if (email && password) {
-        const mockUser = {
-          id: '1',
-          email,
-          name: 'Test User',
-        }
+        const consumer_id = await axios
+          .post(`${authEndpoint}/admin/consumers`, {
+            username: email,
+            custom_id: randomUUID(),
+          })
+          .then((response) => response.id)
+          .catch((err) => console.log(`There was an error fetching the consumer_id: ${err}`))
 
-        setUser(mockUser)
+        const client = await axios
+          .post(`${authEndpoint}/admin/clients`, {
+            name: 'CCs',
+            redirect_uri: '/dashboard',
+            consumer_id,
+          })
+          .then((response) => response.id)
+          .catch((err) => console.log(`There was an error fetching the client: ${err}`))
+
+        const auth_token = await axios.post(`${authEndpoint}/oauth2/tokens`, {
+          credential: {
+            id: client,
+          },
+          token_type: 'bearer',
+          expires_in: 7200,
+          scope: 'read write',
+          authenticated_userid: consumer_id,
+        })
+        setUser(user)
         localStorage.setItem('auth_token', 'mock_token_123')
         return true
       }
@@ -116,4 +132,3 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
-

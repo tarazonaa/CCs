@@ -13,7 +13,7 @@
   "forgot_password": "¿Olvidaste tu contraseña?",
   "dont_have_account": "¿No tienes una cuenta?",
   "sign_up_now": "Regístrate ahora",
-  "password_requirements": "Tu contraseña debe tener lo siguiente:",
+  "password_requirements_intro": "Tu contraseña debe tener lo siguiente:",
   "requirement_8_characters": "Al menos 8 caracteres",
   "requirement_uppercase": "Al menos una letra mayúscula",
   "requirement_lowercase": "Al menos una letra minúscula",
