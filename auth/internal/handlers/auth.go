@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"net/http"
 	"auth-service/internal/models"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -18,14 +19,14 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 func (h *AuthHandler) ShowAuthorizationPage(c *gin.Context) {
 	clientID := c.Query("client_id")
 	scope := c.Query("scope")
-	
+
 	if clientID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "client_id required"})
 		return
 	}
 
 	// Get client details
-	var app models.OAuth2Application
+	var app models.OAuth2Credential
 	if err := h.db.Preload("Consumer").Where("client_id = ?", clientID).First(&app).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "application not found"})
 		return
