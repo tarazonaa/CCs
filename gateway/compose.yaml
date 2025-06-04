@@ -14,7 +14,6 @@ services:
     networks:
       - cloud-demo
     restart: unless-stopped
-  
   logger:
     build: ./logger
     container_name: cc-logger
