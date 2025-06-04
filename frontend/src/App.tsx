@@ -1,10 +1,11 @@
 import type React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
-import LoginPage from '@/pages/LoginPage'
 import Dashboard from '@/pages/Dashboard'
 import './i18n/config'
 import { LanguageWrapper } from './LanguageWrapper'
+import NotFound from './pages/NotFound'
+import AuthPage from './pages/AuthPage'
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,7 +31,7 @@ const App: React.FC = () => {
               element={
                 <LanguageWrapper>
                   <PublicRoute>
-                    <LoginPage />
+                    <AuthPage />
                   </PublicRoute>
                 </LanguageWrapper>
               }
@@ -54,6 +55,8 @@ const App: React.FC = () => {
                 />
               }
             />
+
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </Router>
