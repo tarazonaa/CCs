@@ -57,6 +57,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Email	 string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
 		Username string `json:"username" binding:"required"`
+		Name string 	`json:"name" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -72,10 +73,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	user := &models.User{
 		Email: req.Email,
 		Username: req.Username,
+		Name: req.Name,
+		Password: req.Password,
 	}
-
-	// Should add error handling?
-	user.HashPassword(req.Password)
 
 	if err := h.db.Create(user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})

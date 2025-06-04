@@ -2,8 +2,8 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Insert a test user with encrypted email and password
-INSERT INTO users (id, username, email, password)
-    VALUES (gen_random_uuid (), 'tarazonaa', 'andres.tara.so@gmail.com', '$2a$12$RhlrMmyvcM0En8PeNOINJus0lE3WKIaRlVD/BTfThF0pqpVYUpKZm')
+INSERT INTO users (id, username, email, name,  password)
+    VALUES (gen_random_uuid (), 'tarazonaa', 'andres.tara.so@gmail.com', 'Mr. BBT','$2a$12$RhlrMmyvcM0En8PeNOINJus0lE3WKIaRlVD/BTfThF0pqpVYUpKZm')
 ON CONFLICT (username)
     DO NOTHING;
 

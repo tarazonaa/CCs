@@ -50,9 +50,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data.active) {
           setUser({
             id: data.authenticated_userid,
-            email: data.email ?? 'unknown@email.com',
-            name: data.name ?? 'unknown',
-            username: data.username ?? 'unknown',
+            email: data.email,
+            name: data.name,
+            username: data.username,
           })
         } else {
           localStorage.removeItem('access_token')
