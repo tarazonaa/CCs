@@ -1,0 +1,46 @@
+package models
+
+import (
+	"time"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+type AuthorizationCode struct {
+	ID                  string    `json:"id" gorm:"primaryKey"`
+	Code                string    `json:"code" gorm:"uniqueIndex;not null"`
+	ClientID            string    `json:"client_id" gorm:"not null"`
+	UserID              uint      `json:"user_id" gorm:"not null"`
+	RedirectURI         string    `json:"redirect_uri" gorm:"not null"`
+	Scopes              []string  `json:"scopes" gorm:"serializer:json"`
+	CodeChallenge       string    `json:"-"`
+	CodeChallengeMethod string    `json:"-"`
+	ExpiresAt           time.Time `json:"expires_at"`
+	IsUsed              bool      `json:"is_used" gorm:"default:false"`
+	CreatedAt           time.Time `json:"created_at"`
+
+	// Relations
+	Client OAuth2Application `json:"client,omitempty" gorm:"foreignKey:ClientID;references:ClientID"`
+	User   User              `json:"user,omitempty" gorm:"foreignKey:UserID"`
+}
+
+func (ac *AuthorizationCode) BeforeCreate(tx *gorm.DB) error {
+	if ac.ID == "" {
+		ac.ID = uuid.New().String()
+	}
+	if ac.Code == "" {
+		ac.Code = uuid.New().String()
+	}
+	if ac.ExpiresAt.IsZero() {
+		ac.ExpiresAt = time.Now().Add(10 * time.Minute)
+	}
+	return nil
+}
+
+func (ac *AuthorizationCode) IsExpired() bool {
+	return time.Now().After(ac.ExpiresAt)
+}
+
+func (ac *AuthorizationCode) IsValid() bool {
+	return !ac.IsExpired() && !ac.IsUsed
+}
