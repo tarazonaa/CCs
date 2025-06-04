@@ -12,7 +12,9 @@ import (
 	"auth-service/internal/models"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"slices"
 )
 
 type OAuth2Service struct {
@@ -209,7 +211,6 @@ func (s *OAuth2Service) handleAuthorizationCodeGrant(req *TokenRequest) (*TokenR
 	authCode.IsUsed = true
 	s.db.Save(&authCode)
 
-	// Create access token
 	return s.createTokenResponse(&app, authCode.UserID, strings.Join(authCode.Scopes, " "))
 }
 
@@ -218,7 +219,6 @@ func (s *OAuth2Service) handleClientCredentialsGrant(req *TokenRequest) (*TokenR
 		return nil, errors.New("client credentials flow is disabled")
 	}
 
-	// Validate client credentials
 	var app models.OAuth2Credential
 	if err := s.validateClient(req.ClientID, req.ClientSecret, &app); err != nil {
 		return nil, err
@@ -239,7 +239,6 @@ func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *model
 }
 
 func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID uint, scope string) (*TokenResponse, error) {
-	// Create access token
 	accessToken := &models.OAuth2Token{
 		TokenType:    "bearer",
 		ExpiresIn:    s.config.OAuth2.AccessTokenExpiration,
@@ -280,14 +279,39 @@ func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID
 	return response, nil
 }
 
+func (s *OAuth2Service) handlePasswordGrant(req *TokenRequest) (*TokenResponse, error) {
+	if !s.config.OAuth2.EnablePasswordCredentials {
+		return nil, errors.New("password grant flow is disabled")
+	}
+
+	if req.Username == "" || req.Password == "" {
+		return nil, errors.New("missing username or password")
+	}
+
+	var user models.User
+	if err := s.db.Where("email = ?", req.Username).First(&user).Error; err != nil {
+		return nil, errors.New("invalid credentials")
+	}
+
+	if !user.IsActive {
+		return nil, errors.New("user is inactive")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		return nil, errors.New("invalid credentials")
+	}
+
+	var app models.OAuth2Credential
+	if err := s.validateClient(req.ClientID, req.ClientSecret, &app); err != nil {
+		return nil, err
+	}
+
+	return s.createTokenResponse(&app, user.ID, req.Scope)
+}
+
 // Helper functions
 func (s *OAuth2Service) isValidRedirectURI(uri string, validURIs []string) bool {
-	for _, validURI := range validURIs {
-		if uri == validURI {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(validURIs, uri)
 }
 
 func (s *OAuth2Service) parseUserID(userIDStr string) uint {
@@ -296,14 +320,9 @@ func (s *OAuth2Service) parseUserID(userIDStr string) uint {
 		return 0
 	}
 
-	return 1 // Placeholder
+	return 1
 }
 
 func (s *OAuth2Service) handleRefreshTokenGrant(req *TokenRequest) (*TokenResponse, error) {
-	// Implementation for refresh token grant
 	return nil, errors.New("refresh token grant not implemented yet")
-}
-
-func (s *OAuth2Service) handlePasswordGrant(req *TokenRequest) (*TokenResponse, error) {
-	return nil, errors.New("password grant not implemented")
 }
