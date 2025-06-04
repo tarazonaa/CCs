@@ -56,7 +56,7 @@ func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
 	// Get the user from DB
 	userUUID, err := uuid.Parse(token.AuthenticatedUserID)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"active": false,
 		})
 		return
