@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import DrawingCanvas from '@/components/DrawingCanvas';
-import DrawingHistory from '@/components/DrawingHistory';
+import type React from 'react'
+import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import DrawingCanvas from '@/components/DrawingCanvas'
+import DrawingHistory from '@/components/DrawingHistory'
 
 export interface Drawing {
-  id: string;
-  imageData: string;
-  prediction?: string;
-  confidence?: number;
-  timestamp: Date;
+  id: string
+  imageData: string
+  prediction?: string
+  confidence?: number
+  timestamp: Date
 }
 
 const Dashboard: React.FC = () => {
-  const { user, logout } = useAuth();
-  const [drawings, setDrawings] = useState<Drawing[]>([]);
-  const [activeTab, setActiveTab] = useState<'draw' | 'history'>('draw');
+  const { user, logout } = useAuth()
+  const [drawings, setDrawings] = useState<Drawing[]>([])
+  const [activeTab, setActiveTab] = useState<'draw' | 'history'>('draw')
 
   const handleDrawingComplete = (imageData: string) => {
     const newDrawing: Drawing = {
@@ -22,15 +23,15 @@ const Dashboard: React.FC = () => {
       imageData,
       timestamp: new Date(),
       prediction: '?',
-      confidence: 0
-    };
-    
-    setDrawings(prev => [newDrawing, ...prev]);
-  };
+      confidence: 0,
+    }
+
+    setDrawings((prev) => [newDrawing, ...prev])
+  }
 
   const clearHistory = () => {
-    setDrawings([]);
-  };
+    setDrawings([])
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -41,6 +42,7 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center space-x-4">
               <span className="text-gray-600">Welcome, {user?.name}</span>
               <button
+                type="button"
                 onClick={logout}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
@@ -55,6 +57,7 @@ const Dashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             <button
+              type="button"
               onClick={() => setActiveTab('draw')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === 'draw'
@@ -65,6 +68,7 @@ const Dashboard: React.FC = () => {
               Draw
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('history')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === 'history'
@@ -79,15 +83,14 @@ const Dashboard: React.FC = () => {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'draw' && (
-          <DrawingCanvas onDrawingComplete={handleDrawingComplete} />
-        )}
+        {activeTab === 'draw' && <DrawingCanvas onDrawingComplete={handleDrawingComplete} />}
         {activeTab === 'history' && (
           <DrawingHistory drawings={drawings} onClearHistory={clearHistory} />
         )}
       </main>
     </div>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard
+
