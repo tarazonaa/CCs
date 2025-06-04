@@ -6,6 +6,7 @@ import './i18n/config'
 import { LanguageWrapper } from './LanguageWrapper'
 import NotFound from './pages/NotFound'
 import AuthPage from './pages/AuthPage'
+import { SnackbarProvider } from 'notistack'
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -22,45 +23,48 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Routes>
-            <Route
-              path="/:lng/login"
-              element={
-                <LanguageWrapper>
-                  <PublicRoute>
-                    <AuthPage />
-                  </PublicRoute>
-                </LanguageWrapper>
-              }
-            />
-            <Route
-              path="/:lng/dashboard"
-              element={
-                <LanguageWrapper>
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                </LanguageWrapper>
-              }
-            />
-            <Route
-              path="/"
-              element={
-                <Navigate
-                  to={`/${navigator.language.startsWith('es') ? 'es' : 'en'}/dashboard`}
-                  replace
-                />
-              }
-            />
+    <>
+      <SnackbarProvider />
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Routes>
+              <Route
+                path="/:lng/login"
+                element={
+                  <LanguageWrapper>
+                    <PublicRoute>
+                      <AuthPage />
+                    </PublicRoute>
+                  </LanguageWrapper>
+                }
+              />
+              <Route
+                path="/:lng/dashboard"
+                element={
+                  <LanguageWrapper>
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  </LanguageWrapper>
+                }
+              />
+              <Route
+                path="/"
+                element={
+                  <Navigate
+                    to={`/${navigator.language.startsWith('es') ? 'es' : 'en'}/dashboard`}
+                    replace
+                  />
+                }
+              />
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
+    </>
   )
 }
 
