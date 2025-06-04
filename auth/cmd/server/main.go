@@ -70,11 +70,13 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 		oauth2Group.POST("/token", oauth2Handler.OAuth2Token)
 		oauth2Group.Any("/tokens", oauth2Handler.OAuth2Tokens)
 		oauth2Group.Any("/tokens/:token_id", oauth2Handler.OAuth2TokenByID)
+		oauth2Group.POST("/introspect", oauth2Handler.IntrospectToken)
 	}
 
 	authGroup := router.Group("/auth")
 	{
 		authGroup.GET("/authorize", authHandler.ShowAuthorizationPage)
+		authGroup.POST("/register", authHandler.Register)
 	}
 
 	apiGroup := router.Group("/api/v1")
@@ -111,6 +113,7 @@ func corsMiddleware() gin.HandlerFunc {
 
 		allowedOrigins := map[string]bool{
 			"http://localhost:3000": true,
+			"http://localhost:5173": true,
 			"http://127.0.0.1:3000": true,
 			"http://localhost:3001": true,
 		}

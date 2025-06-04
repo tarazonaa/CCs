@@ -55,6 +55,7 @@ type TokenRequest struct {
 	AuthenticatedUserID string `json:"authenticated_userid" form:"authenticated_userid"`
 	Username            string `json:"username" form:"username"`
 	Password            string `json:"password" form:"password"`
+	Email               string `json:"email" form:"email"`
 }
 
 type AuthorizeResponse struct {
@@ -113,7 +114,7 @@ func (s *OAuth2Service) handleAuthorizationCodeFlow(req *AuthorizeRequest, app *
 		Scopes:              strings.Fields(req.Scope),
 		CodeChallenge:       req.CodeChallenge,
 		CodeChallengeMethod: req.CodeChallengeMethod,
-		ExpiresAt:           time.Now().Add(time.Duration(s.config.OAuth2.AuthCodeExpiration) * time.Second),
+		ExpiresAt:           time.Now().UTC().Add(time.Duration(s.config.OAuth2.AuthCodeExpiration) * time.Second),
 	}
 
 	if err := s.db.Create(authCode).Error; err != nil {
@@ -223,7 +224,7 @@ func (s *OAuth2Service) handleClientCredentialsGrant(req *TokenRequest) (*TokenR
 	if err := s.validateClient(req.ClientID, req.ClientSecret, &app); err != nil {
 		return nil, err
 	}
-	return s.createTokenResponse(&app, 0, req.Scope)
+	return s.createTokenResponse(&app, uuid.Nil, req.Scope)
 }
 
 func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *models.OAuth2Credential) error {
@@ -238,7 +239,7 @@ func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *model
 	return nil
 }
 
-func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID uint, scope string) (*TokenResponse, error) {
+func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID uuid.UUID, scope string) (*TokenResponse, error) {
 	accessToken := &models.OAuth2Token{
 		TokenType:    "bearer",
 		ExpiresIn:    s.config.OAuth2.AccessTokenExpiration,
@@ -246,8 +247,8 @@ func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID
 		CredentialID: app.ID,
 	}
 
-	if userID > 0 {
-		accessToken.AuthenticatedUserID = fmt.Sprintf("%d", userID)
+	if userID != uuid.Nil {
+		accessToken.AuthenticatedUserID = userID.String()
 	}
 
 	if err := s.db.Create(accessToken).Error; err != nil {
@@ -284,12 +285,12 @@ func (s *OAuth2Service) handlePasswordGrant(req *TokenRequest) (*TokenResponse, 
 		return nil, errors.New("password grant flow is disabled")
 	}
 
-	if req.Username == "" || req.Password == "" {
+	if req.Email == "" || req.Password == "" {
 		return nil, errors.New("missing username or password")
 	}
 
 	var user models.User
-	if err := s.db.Where("email = ?", req.Username).First(&user).Error; err != nil {
+	if err := s.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 
@@ -314,13 +315,12 @@ func (s *OAuth2Service) isValidRedirectURI(uri string, validURIs []string) bool 
 	return slices.Contains(validURIs, uri)
 }
 
-func (s *OAuth2Service) parseUserID(userIDStr string) uint {
-
-	if userIDStr == "" {
-		return 0
+func (s *OAuth2Service) parseUserID(userIDStr string) uuid.UUID {
+	parsed, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Println("invalid UUID: ", err)
 	}
-
-	return 1
+	return parsed
 }
 
 func (s *OAuth2Service) handleRefreshTokenGrant(req *TokenRequest) (*TokenResponse, error) {

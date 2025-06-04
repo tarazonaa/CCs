@@ -37,6 +37,9 @@ func (t *OAuth2Token) BeforeCreate(tx *gorm.DB) error {
 	if t.TokenType == "" {
 		t.TokenType = "bearer"
 	}
+	if t.TokenType == "refresh" && t.RefreshToken == "" {
+		t.RefreshToken = generateRandomToken()
+	}
 	if t.CreatedAt == 0 {
 		t.CreatedAt = time.Now().Unix() * 1000
 	}

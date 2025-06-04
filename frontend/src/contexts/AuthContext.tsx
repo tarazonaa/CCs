@@ -1,10 +1,10 @@
-// contexts/AuthContext.tsx
 import axios from 'axios'
-import { randomUUID } from 'node:crypto'
 import type React from 'react'
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { useParams } from 'react-router'
 
-const authEndpoint = process.env.AUTH_ENDPOINT
+const authEndpoint = import.meta.env.VITE_AUTH_ENDPOINT
+const provisionKey = import.meta.env.VITE_PROVISION_KEY
 
 interface User {
   id: string
@@ -15,120 +15,133 @@ interface User {
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<void>
+  refreshToken: () => Promise<void>
   logout: () => void
   loading: boolean
-  signup: (email: string, password: string, username: string) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider')
   return context
 }
 
-interface AuthProviderProps {
-  children: ReactNode
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const { lang } = useParams<{ lang: string }>()
+
   useEffect(() => {
-    // Check for existing session on app load
-    const checkAuth = async () => {
+    const checkSession = async () => {
+      const token = localStorage.getItem('access_token')
+      if (!token) return setLoading(false)
+
       try {
-        const token = localStorage.getItem('auth_token')
-        if (token) {
-          // TODO: Validate token with your Go backend
-          // For now, we'll simulate a logged-in user
+        const { data } = await axios.post(`${authEndpoint}/oauth2/introspect`, { token })
+        if (data.active) {
           setUser({
-            id: '1',
-            email: 'user@example.com',
-            name: 'Andres',
+            id: data.authenticated_userid,
+            email: data.email,
+            name: data.username
           })
+        } else {
+          localStorage.removeItem('access_token')
         }
-      } catch (error) {
-        console.error('Auth check failed:', error)
-        localStorage.removeItem('auth_token')
+      } catch (err) {
+        console.error('Token validation failed:', err)
+        localStorage.removeItem('access_token')
       } finally {
         setLoading(false)
       }
     }
 
-    checkAuth()
+    checkSession()
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  /*
+   *  '{
+    "grant_type": "password",
+    "client_id": "CCs-client-id",
+    "client_secret": "holajorge",
+        "email": "andres.tara.so@gmail.com",
+        "password": "holaJorge@123",
+        "scope": "read write"
+  }'
+   * */
+
+  const login = async (email: string, password: string) => {
+    await axios
+      .post(`${authEndpoint}/oauth2/token`, {
+        client_id: 'CCs-client-id',
+        client_secret: 'holajorge',
+        grant_type: 'password',
+        provision_key: provisionKey,
+        scope: 'read write',
+        email,
+        password,
+      })
+      .then((res) => {
+        localStorage.setItem('access_token', res.data.access_token)
+        localStorage.setItem('refresh_token', res.data.refresh_token)
+      })
+      .finally(() => {
+        const currLang = lang || 'en'
+        window.location.href = `/${currLang}/dashboard`
+      })
+  }
+  const refreshToken = async () => {
+    const refreshToken = localStorage.getItem('refresh_token')
+    if (!refreshToken) {
+      logout() // No refresh token, force logout
+      return null
+    }
+
     try {
-      if (email && password) {
-        const consumer_id = await axios
-          .post(`${authEndpoint}/admin/consumers`, {
-            username: email,
-            custom_id: randomUUID(),
-          })
-          .then((response) => response.id)
-          .catch((err) => console.log(`There was an error fetching the consumer_id: ${err}`))
+      const response = await axios.post(`${authEndpoint}/oauth2/token`, {
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: 'CCs-client-id',
+        client_secret: 'holajorge',
+      })
 
-        const client = await axios
-          .post(`${authEndpoint}/admin/clients`, {
-            name: 'CCs',
-            redirect_uri: '/dashboard',
-            consumer_id,
-          })
-          .then((response) => response.id)
-          .catch((err) => console.log(`There was an error fetching the client: ${err}`))
-
-        const auth_token = await axios.post(`${authEndpoint}/oauth2/tokens`, {
-          credential: {
-            id: client,
-          },
-          token_type: 'bearer',
-          expires_in: 7200,
-          scope: 'read write',
-          authenticated_userid: consumer_id,
-        })
-        setUser(user)
-        localStorage.setItem('auth_token', 'mock_token_123')
-        return true
+      // Store new tokens
+      localStorage.setItem('access_token', response.data.access_token)
+      if (response.data.refresh_token) {
+        localStorage.setItem('refresh_token', response.data.refresh_token)
       }
-      return false
+
+      return response.data.access_token
     } catch (error) {
-      console.error('Login failed:', error)
-      return false
+      console.error('Token refresh failed:', error)
+      logout() // Refresh failed, force logout
+      return null
     }
   }
 
   const logout = () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
     setUser(null)
-    localStorage.removeItem('auth_token')
   }
 
-  const signup = async () => {
-    return true
-  }
-
-  const value: AuthContextType = {
+  const value = {
     user,
     isAuthenticated: !!user,
     login,
     logout,
     loading,
-    signup,
+    refreshToken,
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-      </div>
-    )
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return loading ? (
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin h-10 w-10 border-b-2 border-blue-500 rounded-full" />
+    </div>
+  ) : (
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  )
 }
