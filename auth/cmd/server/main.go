@@ -1,13 +1,14 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"time"
 	"auth-service/internal/config"
 	"auth-service/internal/handlers"
 	"auth-service/internal/models"
 	"auth-service/internal/services"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -22,14 +23,14 @@ func main() {
 
 	cfg := config.LoadConfig()
 	db := config.InitDatabase(cfg)
-	globalDB = db 
-	
+	globalDB = db
+
 	oauth2Service := services.NewOAuth2Service(db, cfg)
 	oauth2Handler := handlers.NewOAuth2Handler(oauth2Service, db, cfg)
 	authHandler := handlers.NewAuthHandler(db)
-	
+
 	router := setupRouter(oauth2Handler, authHandler)
-	
+
 	server := &http.Server{
 		Addr:         cfg.Host + ":" + cfg.Port,
 		Handler:      router,
@@ -40,7 +41,7 @@ func main() {
 
 	log.Printf("OAuth 2.0 Authorization Server starting on %s:%s", cfg.Host, cfg.Port)
 	log.Printf("Provision Key: %s", cfg.ProvisionKey)
-	
+
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal("Failed to start server:", err)
 	}
@@ -48,7 +49,7 @@ func main() {
 
 func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.AuthHandler) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
-	
+
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
@@ -107,19 +108,19 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		
+
 		allowedOrigins := map[string]bool{
-			"http://localhost:3000":  true,
+			"http://localhost:3000": true,
 			"http://127.0.0.1:3000": true,
-			"http://localhost:3001":  true,
+			"http://localhost:3001": true,
 		}
-		
+
 		if allowedOrigins[origin] {
 			c.Header("Access-Control-Allow-Origin", origin)
 		} else {
 			c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
 		}
-		
+
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		c.Header("Access-Control-Expose-Headers", "Content-Length")
@@ -173,7 +174,7 @@ func listConsumers(c *gin.Context) {
 
 func getConsumer(c *gin.Context) {
 	consumerID := c.Param("consumer_id")
-	
+
 	var consumer models.Consumer
 	if err := globalDB.Where("id = ?", consumerID).First(&consumer).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -188,7 +189,7 @@ func getConsumer(c *gin.Context) {
 }
 
 func listClients(c *gin.Context) {
-	var clients []models.OAuth2Application
+	var clients []models.OAuth2Credential
 	if err := globalDB.Preload("Consumer").Find(&clients).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch clients"})
 		return
@@ -214,7 +215,7 @@ func createClient(c *gin.Context) {
 		return
 	}
 
-	client := &models.OAuth2Application{
+	client := &models.OAuth2Credential{
 		Name:         req.Name,
 		ClientID:     req.ClientID,
 		ClientSecret: req.ClientSecret,
@@ -232,8 +233,8 @@ func createClient(c *gin.Context) {
 
 func getClient(c *gin.Context) {
 	clientID := c.Param("client_id")
-	
-	var client models.OAuth2Application
+
+	var client models.OAuth2Credential
 	if err := globalDB.Preload("Consumer").Where("client_id = ?", clientID).First(&client).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "client not found"})
@@ -248,14 +249,14 @@ func getClient(c *gin.Context) {
 
 func updateClient(c *gin.Context) {
 	clientID := c.Param("client_id")
-	
+
 	var updates map[string]interface{}
 	if err := c.ShouldBindJSON(&updates); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	var client models.OAuth2Application
+	var client models.OAuth2Credential
 	if err := globalDB.Where("client_id = ?", clientID).First(&client).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "client not found"})
@@ -275,8 +276,8 @@ func updateClient(c *gin.Context) {
 
 func deleteClient(c *gin.Context) {
 	clientID := c.Param("client_id")
-	
-	result := globalDB.Where("client_id = ?", clientID).Delete(&models.OAuth2Application{})
+
+	result := globalDB.Where("client_id = ?", clientID).Delete(&models.OAuth2Credential{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete client"})
 		return
