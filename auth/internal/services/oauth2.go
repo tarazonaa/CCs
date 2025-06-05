@@ -11,10 +11,11 @@ import (
 	"auth-service/internal/config"
 	"auth-service/internal/models"
 
+	"slices"
+
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"slices"
 )
 
 type OAuth2Service struct {
@@ -64,9 +65,9 @@ type AuthorizeResponse struct {
 
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token,omitempty"`
+	AccessTokenExpiration time.Time    `json:"access_token_expiration,omitempty"`
+	RefreshTokenExpiration time.Time    `json:"refresh_token_expiration,omitempty"`
 	Scope        string `json:"scope,omitempty"`
 }
 
@@ -141,8 +142,10 @@ func (s *OAuth2Service) handleImplicitFlow(req *AuthorizeRequest, app *models.OA
 
 	// creamos el token directo
 	token := &models.OAuth2Token{
-		TokenType:           "bearer",
-		ExpiresIn:           s.config.OAuth2.AccessTokenExpiration,
+		AccessToken:           uuid.New().String(),
+		AccessTokenExpiration: time.Now().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration)),
+		RefreshToken:          uuid.New().String(),
+		RefreshTokenExpiration: time.Now().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration)),
 		Scope:               req.Scope,
 		AuthenticatedUserID: req.AuthenticatedUserID,
 		CredentialID:        app.ID,
@@ -154,7 +157,7 @@ func (s *OAuth2Service) handleImplicitFlow(req *AuthorizeRequest, app *models.OA
 
 	redirectURL, _ := url.Parse(req.RedirectURI)
 	fragment := fmt.Sprintf("access_token=%s&token_type=bearer&expires_in=%d",
-		token.AccessToken, token.ExpiresIn)
+		token.AccessToken, token.AccessTokenExpiration)
 	if req.Scope != "" {
 		fragment += "&scope=" + url.QueryEscape(req.Scope)
 	}
@@ -241,41 +244,26 @@ func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *model
 
 func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID uuid.UUID, scope string) (*TokenResponse, error) {
 	accessToken := &models.OAuth2Token{
-		TokenType:    "bearer",
-		ExpiresIn:    s.config.OAuth2.AccessTokenExpiration,
+		AccessTokenExpiration:    time.Now().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
+		RefreshTokenExpiration:   time.Now().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
 		Scope:        scope,
 		CredentialID: app.ID,
-	}
-
-	if userID != uuid.Nil {
-		accessToken.AuthenticatedUserID = userID.String()
-	}
-
-	if err := s.db.Create(accessToken).Error; err != nil {
-		return nil, fmt.Errorf("failed to create access token: %w", err)
+		AuthenticatedUserID: userID.String(),
+		RefreshToken: uuid.New().String(),
+		AccessToken: uuid.New().String(),
 	}
 
 	response := &TokenResponse{
 		AccessToken: accessToken.AccessToken,
-		TokenType:   accessToken.TokenType,
-		ExpiresIn:   accessToken.ExpiresIn,
+		AccessTokenExpiration: accessToken.AccessTokenExpiration,
+		RefreshToken: accessToken.RefreshToken,
+		RefreshTokenExpiration: accessToken.RefreshTokenExpiration,
 		Scope:       accessToken.Scope,
 	}
 
-	// Create refresh token if enabled
-	if s.config.OAuth2.RefreshTokenExpiration > 0 {
-		refreshToken := &models.OAuth2Token{
-			RefreshToken:        uuid.New().String(),
-			TokenType:           "refresh",
-			ExpiresIn:           s.config.OAuth2.RefreshTokenExpiration,
-			CredentialID:        app.ID,
-			AuthenticatedUserID: accessToken.AuthenticatedUserID,
-		}
-
-		if err := s.db.Create(refreshToken).Error; err == nil {
-			response.RefreshToken = refreshToken.RefreshToken
-		}
-	}
+	if err := s.db.Create(accessToken).Error; err != nil {
+		return nil, fmt.Errorf("failed to create access token: %w", err)
+	} 
 
 	return response, nil
 }

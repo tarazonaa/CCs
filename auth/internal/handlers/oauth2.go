@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"auth-service/internal/config"
 	"auth-service/internal/models"
@@ -77,7 +78,7 @@ func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
 		"client_id":     token.Credential.ClientID,
 		"refresh_token": token.RefreshToken,
 		"scope":         token.Scope,
-		"exp":           token.ExpiresIn,
+		"exp":           token.AccessTokenExpiration,
 	})
 }
 
@@ -213,10 +214,10 @@ func (h *OAuth2Handler) createToken(c *gin.Context) {
 		Credential struct {
 			ID string `json:"id" binding:"required"`
 		} `json:"credential" binding:"required"`
-		TokenType           string `json:"token_type"`
 		AccessToken         string `json:"access_token"`
 		RefreshToken        string `json:"refresh_token"`
-		ExpiresIn           int    `json:"expires_in"`
+		AccessTokenExpiration int    `json:"access_token_expiration"`
+		RefreshTokenExpiration int    `json:"refresh_token_expiration"`
 		Scope               string `json:"scope"`
 		AuthenticatedUserID string `json:"authenticated_userid"`
 	}
@@ -227,10 +228,10 @@ func (h *OAuth2Handler) createToken(c *gin.Context) {
 	}
 
 	token := &models.OAuth2Token{
-		TokenType:           req.TokenType,
 		AccessToken:         req.AccessToken,
 		RefreshToken:        req.RefreshToken,
-		ExpiresIn:           req.ExpiresIn,
+		AccessTokenExpiration: time.Now().Add(time.Duration(req.AccessTokenExpiration) * time.Second),
+		RefreshTokenExpiration: time.Now().Add(time.Duration(req.RefreshTokenExpiration) * time.Second),
 		Scope:               req.Scope,
 		AuthenticatedUserID: req.AuthenticatedUserID,
 		CredentialID:        req.Credential.ID,
