@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface DrawingCanvasProps {
   onDrawingComplete: (imageData: string) => void;
@@ -63,9 +64,40 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
 
   const saveDrawing = () => {
     if (!canvasRef.current) return;
-    
-    const imageData = canvasRef.current.toDataURL();
-    onDrawingComplete(imageData);
+
+    const originalCanvas = canvasRef.current;
+
+    // Create an off-screen canvas to resize
+    const resizedCanvas = document.createElement('canvas');
+    resizedCanvas.width = 112;
+    resizedCanvas.height = 112;
+
+    const ctx = resizedCanvas.getContext('2d');
+    if (!ctx) {
+      console.error("Failed to get context for resized canvas");
+      return;
+    }
+
+    // Draw the original canvas scaled to 112x112
+    ctx.drawImage(originalCanvas, 0, 0, 112, 112);
+
+    // Convert resized canvas to Blob and upload
+    resizedCanvas.toBlob(async (blob) => {
+      if (!blob) {
+        console.error("Failed to convert resized canvas to Blob.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', blob, 'resized-drawing.jpg');
+
+      try {
+        const response = await axios.post('https://10.49.12.47:8443/api/v1/inference', formData);
+        console.log('Upload success:', response.data);
+      } catch (error: any) {
+        console.error('Upload error:', error?.response?.data || error.message);
+      }
+    }, 'image/jpeg');
   };
 
   return (
