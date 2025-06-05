@@ -1,6 +1,7 @@
 {
   "title": "Bienvenido {{name}}",
   "sign_in": "Por favor inicia sesión en tu cuenta",
+  "username": "Nombre de usuario",
   "email_address": "Correo electrónico",
   "password": "Contraseña",
   "invalid_credentials": "Correo o contraseña inválidos",

@@ -19,7 +19,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
   refreshToken: () => Promise<void>
-  register: (name: string, email: string, password: string) => Promise<void>
+  register: (username: string, name: string, email: string, password: string) => Promise<void>
   logout: () => void
   loading: boolean
 }
@@ -35,8 +35,6 @@ export const useAuth = (): AuthContextType => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-
-  const { lang } = useParams<{ lang: string }>()
 
   const { enqueueSnackbar } = useSnackbar()
 
@@ -80,12 +78,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       })
       .then((res) => {
+        setUser({
+          id: res.data.authenticated_userid,
+          email: res.data.email,
+          name: res.data.name,
+          username: res.data.username,
+        })
         localStorage.setItem('access_token', res.data.access_token)
         localStorage.setItem('refresh_token', res.data.refresh_token)
-      })
-      .finally(() => {
-        const currLang = lang || 'en'
-        window.location.href = `/${currLang}/dashboard`
       })
   }
   const refreshToken = async () => {
@@ -116,16 +116,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (username: string, name: string, email: string, password: string) => {
     const response = await axios.post(`${authEndpoint}/auth/register`, {
       email,
+      username,
       name,
       password,
     })
 
-    if (response.status === 200) {
+    if (response.status === 201) {
+      await login(email, password)
       enqueueSnackbar(`Welcome ${response.data.username}`)
-      login(email, password)
     }
   }
 

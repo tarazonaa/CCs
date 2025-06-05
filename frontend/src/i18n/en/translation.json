@@ -1,5 +1,6 @@
 {
   "title": "Welcome {{name}}",
+  "username": "Username",
   "sign_in": "Please sign in to your account",
   "email_address": "Email address",
   "password": "Password",

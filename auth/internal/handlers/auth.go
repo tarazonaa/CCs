@@ -51,13 +51,12 @@ func (h *AuthHandler) ShowAuthorizationPage(c *gin.Context) {
 	}
 }
 
-
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req struct {
-		Email	 string `json:"email" binding:"required"`
+		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
 		Username string `json:"username" binding:"required"`
-		Name string 	`json:"name" binding:"required"`
+		Name     string `json:"name" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -68,12 +67,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	var existing models.User
 	if err := h.db.Where("email = ?", req.Email).First(&existing).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "user already exists"})
+		return
 	}
 
 	user := &models.User{
-		Email: req.Email,
+		Email:    req.Email,
 		Username: req.Username,
-		Name: req.Name,
+		Name:     req.Name,
 		Password: req.Password,
 	}
 
@@ -83,8 +83,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"id": user.ID,
-		"email": user.Email,
+		"id":       user.ID,
+		"email":    user.Email,
 		"username": user.Username,
 	})
 }

@@ -1,8 +1,9 @@
+import { AnimatePresence, motion } from 'framer-motion'
 import type React from 'react'
 import { useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '../contexts/AuthContext'
+import { useNavigate, useParams } from 'react-router'
 
 interface LoginFormProps {
   switchToSignup: () => void
@@ -16,6 +17,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ switchToSignup }) => {
 
   const { login } = useAuth()
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { lang } = useParams()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,6 +27,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ switchToSignup }) => {
 
     try {
       await login(email, password)
+
+      const currLang = lang || 'en'
+      navigate(`/${currLang}/dashboard`)
     } catch (err) {
       setError(t('invalid_credentials'))
     } finally {
