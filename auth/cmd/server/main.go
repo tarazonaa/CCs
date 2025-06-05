@@ -4,6 +4,7 @@ import (
 	"auth-service/internal/config"
 	"auth-service/internal/handlers"
 	"auth-service/internal/models"
+	"auth-service/internal/seeds"
 	"auth-service/internal/services"
 	"auth-service/internal/utils"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
@@ -25,6 +27,14 @@ func main() {
 	cfg := config.LoadConfig()
 	db := config.InitDatabase(cfg)
 	globalDB = db
+
+	if err := db.AutoMigrate(&models.User{}, &models.Consumer{}, &models.OAuth2Token{}, &models.OAuth2Credential{}, &models.AuthorizationCode{}, &models.Image{}); err != nil {
+		log.Fatal("Migration failed:", err)
+	}
+
+	if err := seeds.SeedClients(db, "clients.json"); err != nil {
+		log.Fatal("Seed failed: ", err)
+	}
 
 	oauth2Service := services.NewOAuth2Service(db, cfg)
 	oauth2Handler := handlers.NewOAuth2Handler(oauth2Service, db, cfg)
@@ -228,7 +238,7 @@ func createClient(c *gin.Context) {
 		ClientID     string   `json:"client_id"`
 		ClientSecret string   `json:"client_secret"`
 		RedirectURIs []string `json:"redirect_uris" binding:"required"`
-		ConsumerID   string   `json:"consumer_id" binding:"required"`
+		ConsumerID   uuid.UUID   `json:"consumer_id" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
