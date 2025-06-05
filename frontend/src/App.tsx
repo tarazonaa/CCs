@@ -23,8 +23,11 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const App: React.FC = () => {
   return (
-    <>
-      <SnackbarProvider />
+    <SnackbarProvider
+      maxSnack={3}
+      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      autoHideDuration={1000}
+    >
       <AuthProvider>
         <Router>
           <div className="min-h-screen bg-gray-50">
@@ -64,7 +67,7 @@ const App: React.FC = () => {
           </div>
         </Router>
       </AuthProvider>
-    </>
+    </SnackbarProvider>
   )
 }
 
