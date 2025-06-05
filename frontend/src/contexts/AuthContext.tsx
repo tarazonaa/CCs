@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useSnackbar } from 'notistack'
 import type React from 'react'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 const authEndpoint = import.meta.env.VITE_AUTH_ENDPOINT
 const provisionKey = import.meta.env.VITE_PROVISION_KEY
@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const { enqueueSnackbar } = useSnackbar()
 
-  const checkSession = async () => {
+  const checkSession = useCallback(async () => {
     const token = localStorage.getItem('access_token')
     if (!token) return setLoading(false)
 
@@ -53,17 +53,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         localStorage.removeItem('access_token')
       }
+      return data
     } catch (err) {
       console.error('Token validation failed:', err)
       localStorage.removeItem('access_token')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     checkSession()
-  })
+  }, [checkSession])
 
   const login = async (email: string, password: string) => {
     await axios
@@ -76,10 +77,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
       })
-      .then((res) => {
+      .then(async (res) => {
         localStorage.setItem('access_token', res.data.access_token)
         localStorage.setItem('refresh_token', res.data.refresh_token)
-        checkSession()
+        const user = await checkSession()
+        enqueueSnackbar(`Welcome ${user?.username}`, {
+          variant: 'success',
+        })
       })
   }
   const refreshToken = async () => {
@@ -120,7 +124,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (response.status === 201) {
       await login(email, password)
-      enqueueSnackbar(`Welcome ${response.data.username}`)
     }
   }
 
