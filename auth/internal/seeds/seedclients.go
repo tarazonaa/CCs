@@ -2,6 +2,7 @@ package seeds
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -17,7 +18,7 @@ type RawClient struct {
 	ClientSecret string `json:"client_secret"`
 }
 
-func SeedOAuthClients(db *gorm.DB, path string) error {
+func SeedClients(db *gorm.DB, path string) error {
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -31,8 +32,11 @@ func SeedOAuthClients(db *gorm.DB, path string) error {
 
 	for _, raw := range rawClients {
 		var existing models.OAuth2Credential
-		if err := db.Where("client_id = ?", raw.ClientID).First(&existing).Error; err != nil {
+		err := db.Where("client_id = ?", raw.ClientID).First(&existing).Error 
+		if err == nil {
 			continue
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("Failed to check existing client: %w", err)
 		}
 
 		hashed, err := bcrypt.GenerateFromPassword([]byte(raw.ClientSecret), bcrypt.DefaultCost)

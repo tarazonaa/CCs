@@ -222,7 +222,7 @@ func (h *OAuth2Handler) listTokens(c *gin.Context) {
 func (h *OAuth2Handler) createToken(c *gin.Context) {
 	var req struct {
 		Credential struct {
-			ID string `json:"id" binding:"required"`
+			ID uuid.UUID `json:"id" binding:"required"`
 		} `json:"credential" binding:"required"`
 		AccessToken         string `json:"access_token"`
 		RefreshToken        string `json:"refresh_token"`

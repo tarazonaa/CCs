@@ -235,8 +235,8 @@ func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *model
 		return errors.New("invalid client")
 	}
 
-	if app.ClientSecret != clientSecret {
-		return errors.New("invalid client credentials")
+	if err := bcrypt.CompareHashAndPassword([]byte(app.ClientSecret), []byte(clientSecret)); err != nil {
+		return errors.New("invalid credentials")
 	}
 
 	return nil
