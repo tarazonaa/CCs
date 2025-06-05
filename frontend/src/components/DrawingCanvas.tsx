@@ -64,6 +64,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
 
   const saveDrawing = () => {
     if (!canvasRef.current) return;
+    
+    let canvasImg = canvasRef.current.toDataURL();
+    onDrawingComplete(canvasImg);
 
     const originalCanvas = canvasRef.current;
 
