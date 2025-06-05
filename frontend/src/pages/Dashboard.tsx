@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
           <div className="flex justify-between items-center py-4">
             <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-600">Welcome, {user?.name}</span>
+              <span className="text-gray-600">Welcome, {user?.username}</span>
               <button
                 type="button"
                 onClick={logout}
@@ -93,4 +93,3 @@ const Dashboard: React.FC = () => {
 }
 
 export default Dashboard
-

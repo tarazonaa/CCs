@@ -1,7 +1,7 @@
 import axios from 'axios'
+import { useSnackbar } from 'notistack'
 import type React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
-import { useParams } from 'react-router'
 
 const authEndpoint = import.meta.env.VITE_AUTH_ENDPOINT
 const provisionKey = import.meta.env.VITE_PROVISION_KEY
@@ -10,6 +10,7 @@ interface User {
   id: string
   email: string
   name: string
+  username: string
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
   refreshToken: () => Promise<void>
+  register: (username: string, name: string, email: string, password: string) => Promise<void>
   logout: () => void
   loading: boolean
 }
@@ -33,45 +35,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const { lang } = useParams<{ lang: string }>()
+  const { enqueueSnackbar } = useSnackbar()
+
+  const checkSession = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return setLoading(false)
+
+    try {
+      const { data } = await axios.post(`${authEndpoint}/oauth2/introspect`, { token })
+      if (data.active) {
+        setUser({
+          id: data.authenticated_userid,
+          email: data.email,
+          name: data.name,
+          username: data.username,
+        })
+      } else {
+        localStorage.removeItem('access_token')
+      }
+    } catch (err) {
+      console.error('Token validation failed:', err)
+      localStorage.removeItem('access_token')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const checkSession = async () => {
-      const token = localStorage.getItem('access_token')
-      if (!token) return setLoading(false)
-
-      try {
-        const { data } = await axios.post(`${authEndpoint}/oauth2/introspect`, { token })
-        if (data.active) {
-          setUser({
-            id: data.authenticated_userid,
-            email: data.email,
-            name: data.username
-          })
-        } else {
-          localStorage.removeItem('access_token')
-        }
-      } catch (err) {
-        console.error('Token validation failed:', err)
-        localStorage.removeItem('access_token')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     checkSession()
-  }, [])
-
-  /*
-   *  '{
-    "grant_type": "password",
-    "client_id": "CCs-client-id",
-    "client_secret": "holajorge",
-        "email": "andres.tara.so@gmail.com",
-        "password": "holaJorge@123",
-        "scope": "read write"
-  }'
-   * */
+  })
 
   const login = async (email: string, password: string) => {
     await axios
@@ -87,16 +79,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .then((res) => {
         localStorage.setItem('access_token', res.data.access_token)
         localStorage.setItem('refresh_token', res.data.refresh_token)
-      })
-      .finally(() => {
-        const currLang = lang || 'en'
-        window.location.href = `/${currLang}/dashboard`
+        checkSession()
       })
   }
   const refreshToken = async () => {
     const refreshToken = localStorage.getItem('refresh_token')
     if (!refreshToken) {
-      logout() // No refresh token, force logout
+      logout()
       return null
     }
 
@@ -108,7 +97,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         client_secret: 'holajorge',
       })
 
-      // Store new tokens
       localStorage.setItem('access_token', response.data.access_token)
       if (response.data.refresh_token) {
         localStorage.setItem('refresh_token', response.data.refresh_token)
@@ -117,15 +105,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return response.data.access_token
     } catch (error) {
       console.error('Token refresh failed:', error)
-      logout() // Refresh failed, force logout
+      logout()
       return null
     }
   }
 
-  const logout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    setUser(null)
+  const register = async (username: string, name: string, email: string, password: string) => {
+    const response = await axios.post(`${authEndpoint}/auth/register`, {
+      email,
+      username,
+      name,
+      password,
+    })
+
+    if (response.status === 201) {
+      await login(email, password)
+      enqueueSnackbar(`Welcome ${response.data.username}`)
+    }
+  }
+
+  const logout = async () => {
+    const access_token = localStorage.getItem('access_token')
+    const response = await axios.post(
+      `${authEndpoint}/auth/logout`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      }
+    )
+    if (response.status === 200) {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      setUser(null)
+    }
   }
 
   const value = {
@@ -135,6 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     loading,
     refreshToken,
+    register,
   }
 
   return loading ? (

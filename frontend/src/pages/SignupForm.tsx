@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { useNavigate, useParams } from 'react-router'
 
 interface SignupFormProps {
   switchToLogin: () => void
@@ -10,14 +11,18 @@ interface SignupFormProps {
 
 const SignupForm: React.FC<SignupFormProps> = ({ switchToLogin }) => {
   const { t } = useTranslation()
-  const { signup } = useAuth()
+  const { register } = useAuth()
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  const { lang } = useParams()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,13 +33,16 @@ const SignupForm: React.FC<SignupFormProps> = ({ switchToLogin }) => {
       if (password !== confirmPassword) {
         throw new Error(t('passwords_do_not_match'))
       }
-      await signup(name, email, password)
+      await register(username, name, email, password)
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message || t('signup_failed'))
       }
     } finally {
       setIsLoading(false)
+
+      const currLang = lang || 'en'
+      navigate(`/${currLang}/dashboard`)
     }
   }
 
@@ -74,6 +82,22 @@ const SignupForm: React.FC<SignupFormProps> = ({ switchToLogin }) => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, delay: 0.4 }}
       >
+        <div className="space-y-2">
+          <label htmlFor="name" className="block text-sm font-medium text-text-primary">
+            {t('username')}
+          </label>
+          <motion.input
+            whileFocus={{ scale: 1.01 }}
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="block w-full rounded-lg border border-border bg-surface/50 px-4 py-3 text-text-primary placeholder:text-text-secondary/60 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+            placeholder={t('full_name_placeholder')}
+            disabled={isLoading}
+          />
+        </div>
         <div className="space-y-2">
           <label htmlFor="name" className="block text-sm font-medium text-text-primary">
             {t('full_name')}
@@ -123,7 +147,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ switchToLogin }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{8,}$"
+            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@!#$%^&*])[A-Za-z\d@!#$%^&*]{8,}$"
             className="peer block w-full invalid:[&:not(:placeholder-shown):not(:focus)]:border-red-500 rounded-lg border border-border bg-surface/50 px-4 py-3 text-text-primary placeholder:text-text-secondary/60 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
             placeholder="*********************"
             disabled={isLoading}
