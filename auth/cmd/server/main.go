@@ -28,8 +28,10 @@ func main() {
 	oauth2Service := services.NewOAuth2Service(db, cfg)
 	oauth2Handler := handlers.NewOAuth2Handler(oauth2Service, db, cfg)
 	authHandler := handlers.NewAuthHandler(db)
+	imageService := services.NewImageService(db)
+	imageHandler := handlers.NewImageHandler(imageService)
 
-	router := setupRouter(oauth2Handler, authHandler)
+	router := setupRouter(oauth2Handler, authHandler, imageHandler)
 
 	server := &http.Server{
 		Addr:         cfg.Host + ":" + cfg.Port,
@@ -47,7 +49,7 @@ func main() {
 	}
 }
 
-func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.AuthHandler) *gin.Engine {
+func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.AuthHandler, imageHandler *handlers.ImageHandler) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.New()
@@ -77,6 +79,7 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 	{
 		authGroup.GET("/authorize", authHandler.ShowAuthorizationPage)
 		authGroup.POST("/register", authHandler.Register)
+		authGroup.POST("/logout", authHandler.Logout)
 	}
 
 	apiGroup := router.Group("/api/v1")
@@ -90,6 +93,19 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 				"message":   "This is a protected resource",
 			})
 		})
+
+		// Image routes
+		imageGroup := apiGroup.Group("/images")
+		{
+			imageGroup.POST("", imageHandler.CreateImage)
+			imageGroup.GET("", imageHandler.GetAllImages)
+			imageGroup.GET("/:id", imageHandler.GetImageByID)
+			imageGroup.DELETE("/:id", imageHandler.DeleteImage)
+			imageGroup.GET("/sent/:sent_image_id", imageHandler.GetImageBySentID)
+			imageGroup.GET("/received/:received_image_id", imageHandler.GetImageByReceivedID)
+		}
+
+		apiGroup.GET("/users/:user_id/images", imageHandler.GetUserImages)
 	}
 
 	adminGroup := router.Group("/admin")

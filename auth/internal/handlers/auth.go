@@ -88,3 +88,24 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		"username": user.Username,
 	})
 }
+
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	// Get access token from the request
+	accessToken := c.GetHeader("Authorization")
+	// Remove "Bearer " prefix if present
+	if len(accessToken) > 7 && accessToken[:7] == "Bearer " {
+		accessToken = accessToken[7:]
+	}
+	if accessToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing access token"})
+		return
+	}
+	// Revoke all tokens for the user 
+	if err := h.db.Where("access_token = ?", accessToken).Delete(&models.OAuth2Token{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to revoke tokens"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"message": "logout successful"})
+}

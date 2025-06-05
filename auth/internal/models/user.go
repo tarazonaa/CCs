@@ -33,7 +33,6 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 
-// HashPassword hashes the user's password
 func (u *User) HashPassword(password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -41,10 +40,4 @@ func (u *User) HashPassword(password string) error {
 	}
 	u.Password = string(hashedPassword)
 	return nil
-}
-
-// CheckPassword verifies the password
-func (u *User) CheckPassword(password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
-	return err == nil
 }
