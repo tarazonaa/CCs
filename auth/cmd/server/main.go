@@ -77,6 +77,7 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 	{
 		authGroup.GET("/authorize", authHandler.ShowAuthorizationPage)
 		authGroup.POST("/register", authHandler.Register)
+		authGroup.POST("/logout", authHandler.Logout)
 	}
 
 	apiGroup := router.Group("/api/v1")
