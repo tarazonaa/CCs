@@ -14,19 +14,12 @@ type Image struct {
 	ReceivedImageID uuid.UUID `json:"received_image_id" gorm:"uniqueIndex;not null;type:uuid"`
 	CreatedAt       time.Time `json:"created_at"`
 
-	
 	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
 func (i *Image) BeforeCreate(tx *gorm.DB) error {
 	if i.ID == uuid.Nil {
 		i.ID = uuid.New()
-	}
-	if i.SentImageID == uuid.Nil {
-		i.SentImageID = uuid.New()
-	}
-	if i.ReceivedImageID == uuid.Nil {
-		i.ReceivedImageID = uuid.New()
 	}
 	return nil
 }

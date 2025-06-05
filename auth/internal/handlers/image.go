@@ -20,7 +20,6 @@ func NewImageHandler(imageService *services.ImageService) *ImageHandler {
 }
 
 func (h *ImageHandler) CreateImage(c *gin.Context) {
-	// Get user ID from token (set by ValidateToken middleware)
 	userIDStr := c.GetString("authenticated_userid")
 	if userIDStr == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
@@ -39,9 +38,9 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	// Validate that at least one image ID is provided
-	if req.SentImageID == nil && req.ReceivedImageID == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "at least one image ID (sent_image_id or received_image_id) is required"})
+	// Validate that both image IDs are provided
+	if req.SentImageID == nil || req.ReceivedImageID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "both sent_image_id and received_image_id are required"})
 		return
 	}
 
@@ -70,18 +69,17 @@ func (h *ImageHandler) GetAllImages(c *gin.Context) {
 		userID = &parsedUserID
 	}
 
-	// Parse pagination parameters
-	limit := 10 // default
+	limit := 10
 	if limitStr := c.Query("limit"); limitStr != "" {
 		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
 			if parsedLimit > 100 {
-				parsedLimit = 100 // max limit
+				parsedLimit = 100
 			}
 			limit = parsedLimit
 		}
 	}
 
-	offset := 0 // default
+	offset := 0
 	if offsetStr := c.Query("offset"); offsetStr != "" {
 		if parsedOffset, err := strconv.Atoi(offsetStr); err == nil && parsedOffset >= 0 {
 			offset = parsedOffset
@@ -183,7 +181,7 @@ func (h *ImageHandler) GetUserImages(c *gin.Context) {
 		}
 	}
 
-	offset := 0 // default
+	offset := 0
 	if offsetStr := c.Query("offset"); offsetStr != "" {
 		if parsedOffset, err := strconv.Atoi(offsetStr); err == nil && parsedOffset >= 0 {
 			offset = parsedOffset
