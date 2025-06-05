@@ -5,6 +5,7 @@ import (
 	"auth-service/internal/handlers"
 	"auth-service/internal/models"
 	"auth-service/internal/services"
+	"auth-service/internal/utils"
 	"log"
 	"net/http"
 	"time"
@@ -60,7 +61,7 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":    "healthy",
-			"timestamp": time.Now().UTC(),
+			"timestamp": utils.GetCurrentTS(),
 			"service":   "oauth2-authorization-server",
 		})
 	})

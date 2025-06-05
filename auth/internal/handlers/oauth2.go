@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"auth-service/internal/config"
 	"auth-service/internal/models"
 	"auth-service/internal/services"
+	"auth-service/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -41,14 +43,23 @@ func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
 
 	var token models.OAuth2Token
 	if err := h.db.Preload("Credential").Where("access_token = ?", req.Token).First(&token).Error; err != nil {
-		c.JSON(http.StatusOK, gin.H{"active": false})
+		c.JSON(http.StatusUnauthorized, gin.H{"active": false})
 		return
 	}
 
 	if token.IsExpired() {
-		c.JSON(http.StatusOK, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"active":  false,
 			"refresh": true,
+		})
+		return
+	}
+
+	if token.IsRefreshable() {
+		c.JSON(http.StatusOK, gin.H{
+			"active":  true,
+			"refresh": true,
+			"exp":     token.AccessTokenExpiration.Unix(),
 		})
 		return
 	}
@@ -64,7 +75,7 @@ func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
 
 	var user models.User
 	if err := h.db.Where("id = ?", userUUID).First(&user).Error; err != nil {
-		c.JSON(http.StatusOK, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"active": false,
 		})
 		return
@@ -77,7 +88,7 @@ func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
 		"client_id":     token.Credential.ClientID,
 		"refresh_token": token.RefreshToken,
 		"scope":         token.Scope,
-		"exp":           token.ExpiresIn,
+		"exp":           token.AccessTokenExpiration,
 	})
 }
 
@@ -213,10 +224,10 @@ func (h *OAuth2Handler) createToken(c *gin.Context) {
 		Credential struct {
 			ID string `json:"id" binding:"required"`
 		} `json:"credential" binding:"required"`
-		TokenType           string `json:"token_type"`
 		AccessToken         string `json:"access_token"`
 		RefreshToken        string `json:"refresh_token"`
-		ExpiresIn           int    `json:"expires_in"`
+		AccessTokenExpiration int    `json:"access_token_expiration"`
+		RefreshTokenExpiration int    `json:"refresh_token_expiration"`
 		Scope               string `json:"scope"`
 		AuthenticatedUserID string `json:"authenticated_userid"`
 	}
@@ -227,10 +238,10 @@ func (h *OAuth2Handler) createToken(c *gin.Context) {
 	}
 
 	token := &models.OAuth2Token{
-		TokenType:           req.TokenType,
 		AccessToken:         req.AccessToken,
 		RefreshToken:        req.RefreshToken,
-		ExpiresIn:           req.ExpiresIn,
+		AccessTokenExpiration: utils.GetCurrentTS().Add(time.Duration(req.AccessTokenExpiration) * time.Second),
+		RefreshTokenExpiration: utils.GetCurrentTS().Add(time.Duration(req.RefreshTokenExpiration) * time.Second),
 		Scope:               req.Scope,
 		AuthenticatedUserID: req.AuthenticatedUserID,
 		CredentialID:        req.Credential.ID,

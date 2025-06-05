@@ -2,6 +2,7 @@
 package models
 
 import (
+	"auth-service/internal/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,10 +13,10 @@ type OAuth2Token struct {
 	ID                  string `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
 	AccessToken         string `json:"access_token" gorm:"uniqueIndex;not null"`
 	RefreshToken        string `json:"refresh_token,omitempty" gorm:"uniqueIndex"`
-	TokenType           string `json:"token_type" gorm:"default:bearer"`
-	ExpiresIn           int    `json:"expires_in"`
+	AccessTokenExpiration time.Time    `json:"access_token_expiration,omitempty"` 
+	RefreshTokenExpiration time.Time    `json:"refresh_token_expiration,omitempty"`
 	Scope               string `json:"scope,omitempty"`
-	AuthenticatedUserID string `json:"authenticated_userid,omitempty" gorm:"column:authenticated_userid"` // ← CAMBIO AQUÍ
+	AuthenticatedUserID string `json:"authenticated_userid,omitempty" gorm:"column:authenticated_userid"`
 	CredentialID        string `json:"credential_id" gorm:"not null;type:uuid"`
 	CreatedAt           int64  `json:"created_at"`
 
@@ -34,26 +35,29 @@ func (t *OAuth2Token) BeforeCreate(tx *gorm.DB) error {
 	if t.AccessToken == "" {
 		t.AccessToken = generateRandomToken()
 	}
-	if t.TokenType == "" {
-		t.TokenType = "bearer"
-	}
-	if t.TokenType == "refresh" && t.RefreshToken == "" {
-		t.RefreshToken = generateRandomToken()
-	}
 	if t.CreatedAt == 0 {
-		t.CreatedAt = time.Now().Unix() * 1000
+		t.CreatedAt = utils.GetCurrentTS().Unix() * 1000
 	}
 	return nil
 }
 
 func (t *OAuth2Token) IsExpired() bool {
-	if t.ExpiresIn == 0 {
-		return false
-	}
-	expirationTime := time.Unix(t.CreatedAt/1000, 0).Add(time.Duration(t.ExpiresIn) * time.Second)
-	return time.Now().After(expirationTime)
+	return utils.GetCurrentTS().After(t.AccessTokenExpiration) 
 }
 
 func generateRandomToken() string {
 	return uuid.New().String() + uuid.New().String()
+}
+
+func (t *OAuth2Token) IsRefreshable() bool {
+	// Check if the access token is close to expiration (e.g. within the next hour)
+	if t.IsExpired() {
+		return utils.GetCurrentTS().Before(t.RefreshTokenExpiration)
+	}
+
+	if utils.GetCurrentTS().Before(t.AccessTokenExpiration.Add(-time.Hour)) {
+		return false
+	}
+	
+	return true
 }
