@@ -34,7 +34,7 @@ func (ac *AuthorizationCode) BeforeCreate(tx *gorm.DB) error {
 		ac.Code = uuid.New().String()
 	}
 	if ac.ExpiresAt.IsZero() {
-		ac.ExpiresAt = time.Now().Add(10 * time.Minute)
+		ac.ExpiresAt = time.Now().UTC().Add(10 * time.Minute)
 	}
 	return nil
 }

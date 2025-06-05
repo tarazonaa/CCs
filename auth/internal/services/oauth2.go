@@ -142,10 +142,9 @@ func (s *OAuth2Service) handleImplicitFlow(req *AuthorizeRequest, app *models.OA
 
 	// creamos el token directo
 	token := &models.OAuth2Token{
-		AccessToken:           uuid.New().String(),
-		AccessTokenExpiration: time.Now().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration)),
+		AccessTokenExpiration: time.Now().UTC().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
 		RefreshToken:          uuid.New().String(),
-		RefreshTokenExpiration: time.Now().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration)),
+		RefreshTokenExpiration: time.Now().UTC().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
 		Scope:               req.Scope,
 		AuthenticatedUserID: req.AuthenticatedUserID,
 		CredentialID:        app.ID,
@@ -244,13 +243,12 @@ func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *model
 
 func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID uuid.UUID, scope string) (*TokenResponse, error) {
 	accessToken := &models.OAuth2Token{
-		AccessTokenExpiration:    time.Now().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
-		RefreshTokenExpiration:   time.Now().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
+		AccessTokenExpiration:    time.Now().UTC().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
+		RefreshTokenExpiration:   time.Now().UTC().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
 		Scope:        scope,
 		CredentialID: app.ID,
 		AuthenticatedUserID: userID.String(),
 		RefreshToken: uuid.New().String(),
-		AccessToken: uuid.New().String(),
 	}
 
 	response := &TokenResponse{
@@ -263,7 +261,9 @@ func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID
 
 	if err := s.db.Create(accessToken).Error; err != nil {
 		return nil, fmt.Errorf("failed to create access token: %w", err)
-	} 
+	}
+
+	response.AccessToken = accessToken.AccessToken
 
 	return response, nil
 }
@@ -312,5 +312,27 @@ func (s *OAuth2Service) parseUserID(userIDStr string) uuid.UUID {
 }
 
 func (s *OAuth2Service) handleRefreshTokenGrant(req *TokenRequest) (*TokenResponse, error) {
-	return nil, errors.New("refresh token grant not implemented yet")
+    var app models.OAuth2Credential
+    if err := s.validateClient(req.ClientID, req.ClientSecret, &app); err != nil {
+        return nil, err
+	}
+    
+    var oldToken models.OAuth2Token
+    if err := s.db.Where("refresh_token = ? AND credential_id = ?", req.RefreshToken, app.ID).First(&oldToken).Error; err != nil {
+        return nil, errors.New("invalid refresh token")
+    }
+
+    if time.Now().UTC().After(oldToken.RefreshTokenExpiration) {
+		return nil, errors.New("refresh token expired")
+	}
+
+    if err:= s.db.Delete(&oldToken).Error; err != nil {
+		return nil, fmt.Errorf("failed to delete old token: %w", err)
+	}
+
+    userID, err := uuid.Parse(oldToken.AuthenticatedUserID)
+    if err != nil {
+        return nil, errors.New("invalid user id in token")
+    }
+    return s.createTokenResponse(&app, userID, oldToken.Scope)
 }

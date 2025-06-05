@@ -35,15 +35,28 @@ func (t *OAuth2Token) BeforeCreate(tx *gorm.DB) error {
 		t.AccessToken = generateRandomToken()
 	}
 	if t.CreatedAt == 0 {
-		t.CreatedAt = time.Now().Unix() * 1000
+		t.CreatedAt = time.Now().UTC().Unix() * 1000
 	}
 	return nil
 }
 
 func (t *OAuth2Token) IsExpired() bool {
-	return time.Now().After(t.AccessTokenExpiration) 
+	return time.Now().UTC().After(t.AccessTokenExpiration) 
 }
 
 func generateRandomToken() string {
 	return uuid.New().String() + uuid.New().String()
+}
+
+func (t *OAuth2Token) IsRefreshable() bool {
+	// Check if the access token is close to expiration (e.g. within the next hour)
+	if t.IsExpired() {
+		return time.Now().UTC().Before(t.RefreshTokenExpiration)
+	}
+
+	if time.Now().UTC().Before(t.AccessTokenExpiration.Add(-time.Hour)) {
+		return false
+	}
+	
+	return true
 }
