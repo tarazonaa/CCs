@@ -6,12 +6,24 @@ import numpy as np
 from fastapi import FastAPI
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 
 from model import model
 
 app = FastAPI()
 
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def preprocess_image(file: UploadFile) -> torch.Tensor:
     image = Image.open(file.file).convert("L")  # convert to grayscale
