@@ -65,11 +65,11 @@ type AuthorizeResponse struct {
 }
 
 type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-	AccessTokenExpiration time.Time    `json:"access_token_expiration,omitempty"`
-	RefreshTokenExpiration time.Time    `json:"refresh_token_expiration,omitempty"`
-	Scope        string `json:"scope,omitempty"`
+	AccessToken            string    `json:"access_token"`
+	RefreshToken           string    `json:"refresh_token,omitempty"`
+	AccessTokenExpiration  time.Time `json:"access_token_expiration,omitempty"`
+	RefreshTokenExpiration time.Time `json:"refresh_token_expiration,omitempty"`
+	Scope                  string    `json:"scope,omitempty"`
 }
 
 func (s *OAuth2Service) Authorize(req *AuthorizeRequest) (*AuthorizeResponse, error) {
@@ -143,12 +143,12 @@ func (s *OAuth2Service) handleImplicitFlow(req *AuthorizeRequest, app *models.OA
 
 	// creamos el token directo
 	token := &models.OAuth2Token{
-		AccessTokenExpiration: utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
-		RefreshToken:          uuid.New().String(),
+		AccessTokenExpiration:  utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
+		RefreshToken:           uuid.New().String(),
 		RefreshTokenExpiration: utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
-		Scope:               req.Scope,
-		AuthenticatedUserID: req.AuthenticatedUserID,
-		CredentialID:        app.ID,
+		Scope:                  req.Scope,
+		AuthenticatedUserID:    req.AuthenticatedUserID,
+		CredentialID:           app.ID.String(),
 	}
 
 	if err := s.db.Create(token).Error; err != nil {
@@ -244,20 +244,20 @@ func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *model
 
 func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID uuid.UUID, scope string) (*TokenResponse, error) {
 	accessToken := &models.OAuth2Token{
-		AccessTokenExpiration:    utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
-		RefreshTokenExpiration:   utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
-		Scope:        scope,
-		CredentialID: app.ID,
-		AuthenticatedUserID: userID.String(),
-		RefreshToken: uuid.New().String(),
+		AccessTokenExpiration:  utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
+		RefreshTokenExpiration: utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
+		Scope:                  scope,
+		CredentialID:           app.ID.String(),
+		AuthenticatedUserID:    userID.String(),
+		RefreshToken:           uuid.New().String(),
 	}
 
 	response := &TokenResponse{
-		AccessToken: accessToken.AccessToken,
-		AccessTokenExpiration: accessToken.AccessTokenExpiration,
-		RefreshToken: accessToken.RefreshToken,
+		AccessToken:            accessToken.AccessToken,
+		AccessTokenExpiration:  accessToken.AccessTokenExpiration,
+		RefreshToken:           accessToken.RefreshToken,
 		RefreshTokenExpiration: accessToken.RefreshTokenExpiration,
-		Scope:       accessToken.Scope,
+		Scope:                  accessToken.Scope,
 	}
 
 	if err := s.db.Create(accessToken).Error; err != nil {
@@ -313,27 +313,27 @@ func (s *OAuth2Service) parseUserID(userIDStr string) uuid.UUID {
 }
 
 func (s *OAuth2Service) handleRefreshTokenGrant(req *TokenRequest) (*TokenResponse, error) {
-    var app models.OAuth2Credential
-    if err := s.validateClient(req.ClientID, req.ClientSecret, &app); err != nil {
-        return nil, err
+	var app models.OAuth2Credential
+	if err := s.validateClient(req.ClientID, req.ClientSecret, &app); err != nil {
+		return nil, err
 	}
-    
-    var oldToken models.OAuth2Token
-    if err := s.db.Where("refresh_token = ? AND credential_id = ?", req.RefreshToken, app.ID).First(&oldToken).Error; err != nil {
-        return nil, errors.New("invalid refresh token")
-    }
 
-    if utils.GetCurrentTS().After(oldToken.RefreshTokenExpiration) {
+	var oldToken models.OAuth2Token
+	if err := s.db.Where("refresh_token = ? AND credential_id = ?", req.RefreshToken, app.ID).First(&oldToken).Error; err != nil {
+		return nil, errors.New("invalid refresh token")
+	}
+
+	if utils.GetCurrentTS().After(oldToken.RefreshTokenExpiration) {
 		return nil, errors.New("refresh token expired")
 	}
 
-    if err:= s.db.Delete(&oldToken).Error; err != nil {
+	if err := s.db.Delete(&oldToken).Error; err != nil {
 		return nil, fmt.Errorf("failed to delete old token: %w", err)
 	}
 
-    userID, err := uuid.Parse(oldToken.AuthenticatedUserID)
-    if err != nil {
-        return nil, errors.New("invalid user id in token")
-    }
-    return s.createTokenResponse(&app, userID, oldToken.Scope)
+	userID, err := uuid.Parse(oldToken.AuthenticatedUserID)
+	if err != nil {
+		return nil, errors.New("invalid user id in token")
+	}
+	return s.createTokenResponse(&app, userID, oldToken.Scope)
 }

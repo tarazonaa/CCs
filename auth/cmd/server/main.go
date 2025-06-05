@@ -4,6 +4,7 @@ import (
 	"auth-service/internal/config"
 	"auth-service/internal/handlers"
 	"auth-service/internal/models"
+	"auth-service/internal/seeds"
 	"auth-service/internal/services"
 	"auth-service/internal/utils"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
@@ -30,7 +32,7 @@ func main() {
 		log.Fatal("Migration failed:", err)
 	}
 
-	if err := seeds.seedClients(db); err != nil {
+	if err := seeds.SeedOAuthClients(db, ""); err != nil {
 		log.Fatal("Seed failed: ", err)
 	}
 
@@ -243,12 +245,19 @@ func createClient(c *gin.Context) {
 		return
 	}
 
+	consumerUUID, err := uuid.Parse(req.ConsumerID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+
+	}
+
 	client := &models.OAuth2Credential{
 		Name:         req.Name,
 		ClientID:     req.ClientID,
 		ClientSecret: req.ClientSecret,
 		RedirectURIs: req.RedirectURIs,
-		ConsumerID:   req.ConsumerID,
+		ConsumerID:   consumerUUID,
 	}
 
 	if err := globalDB.Create(client).Error; err != nil {
