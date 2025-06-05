@@ -23,8 +23,7 @@ type AuthorizationCode struct {
 	CreatedAt           time.Time      `json:"created_at"`
 
 	// Relations
-	Client OAuth2Credential `json:"client,omitempty" gorm:"foreignKey:ClientID;references:ClientID"`
-	User   User             `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
 func (ac *AuthorizationCode) BeforeCreate(tx *gorm.DB) error {

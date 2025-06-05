@@ -26,6 +26,14 @@ func main() {
 	db := config.InitDatabase(cfg)
 	globalDB = db
 
+	if err := db.AutoMigrate(&models.User{}, &models.Consumer{}, &models.OAuth2Credential{}, &models.AuthorizationCode{}, &models.Image{}); err != nil {
+		log.Fatal("Migration failed:", err)
+	}
+
+	if err := seeds.seedClients(db); err != nil {
+		log.Fatal("Seed failed: ", err)
+	}
+
 	oauth2Service := services.NewOAuth2Service(db, cfg)
 	oauth2Handler := handlers.NewOAuth2Handler(oauth2Service, db, cfg)
 	authHandler := handlers.NewAuthHandler(db)
