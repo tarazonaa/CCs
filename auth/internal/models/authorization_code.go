@@ -1,6 +1,7 @@
 package models
 
 import (
+	"auth-service/internal/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,13 +35,13 @@ func (ac *AuthorizationCode) BeforeCreate(tx *gorm.DB) error {
 		ac.Code = uuid.New().String()
 	}
 	if ac.ExpiresAt.IsZero() {
-		ac.ExpiresAt = time.Now().UTC().Add(10 * time.Minute)
+		ac.ExpiresAt = utils.GetCurrentTS().Add(10 * time.Minute)
 	}
 	return nil
 }
 
 func (ac *AuthorizationCode) IsExpired() bool {
-	return time.Now().UTC().After(ac.ExpiresAt)
+	return utils.GetCurrentTS().After(ac.ExpiresAt)
 }
 
 func (ac *AuthorizationCode) IsValid() bool {

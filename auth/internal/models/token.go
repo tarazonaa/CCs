@@ -2,6 +2,7 @@
 package models
 
 import (
+	"auth-service/internal/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -35,13 +36,13 @@ func (t *OAuth2Token) BeforeCreate(tx *gorm.DB) error {
 		t.AccessToken = generateRandomToken()
 	}
 	if t.CreatedAt == 0 {
-		t.CreatedAt = time.Now().UTC().Unix() * 1000
+		t.CreatedAt = utils.GetCurrentTS().Unix() * 1000
 	}
 	return nil
 }
 
 func (t *OAuth2Token) IsExpired() bool {
-	return time.Now().UTC().After(t.AccessTokenExpiration) 
+	return utils.GetCurrentTS().After(t.AccessTokenExpiration) 
 }
 
 func generateRandomToken() string {
@@ -51,10 +52,10 @@ func generateRandomToken() string {
 func (t *OAuth2Token) IsRefreshable() bool {
 	// Check if the access token is close to expiration (e.g. within the next hour)
 	if t.IsExpired() {
-		return time.Now().UTC().Before(t.RefreshTokenExpiration)
+		return utils.GetCurrentTS().Before(t.RefreshTokenExpiration)
 	}
 
-	if time.Now().UTC().Before(t.AccessTokenExpiration.Add(-time.Hour)) {
+	if utils.GetCurrentTS().Before(t.AccessTokenExpiration.Add(-time.Hour)) {
 		return false
 	}
 	

@@ -10,6 +10,7 @@ import (
 
 	"auth-service/internal/config"
 	"auth-service/internal/models"
+	"auth-service/internal/utils"
 
 	"slices"
 
@@ -115,7 +116,7 @@ func (s *OAuth2Service) handleAuthorizationCodeFlow(req *AuthorizeRequest, app *
 		Scopes:              strings.Fields(req.Scope),
 		CodeChallenge:       req.CodeChallenge,
 		CodeChallengeMethod: req.CodeChallengeMethod,
-		ExpiresAt:           time.Now().UTC().Add(time.Duration(s.config.OAuth2.AuthCodeExpiration) * time.Second),
+		ExpiresAt:           utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.AuthCodeExpiration) * time.Second),
 	}
 
 	if err := s.db.Create(authCode).Error; err != nil {
@@ -142,9 +143,9 @@ func (s *OAuth2Service) handleImplicitFlow(req *AuthorizeRequest, app *models.OA
 
 	// creamos el token directo
 	token := &models.OAuth2Token{
-		AccessTokenExpiration: time.Now().UTC().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
+		AccessTokenExpiration: utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
 		RefreshToken:          uuid.New().String(),
-		RefreshTokenExpiration: time.Now().UTC().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
+		RefreshTokenExpiration: utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
 		Scope:               req.Scope,
 		AuthenticatedUserID: req.AuthenticatedUserID,
 		CredentialID:        app.ID,
@@ -243,8 +244,8 @@ func (s *OAuth2Service) validateClient(clientID, clientSecret string, app *model
 
 func (s *OAuth2Service) createTokenResponse(app *models.OAuth2Credential, userID uuid.UUID, scope string) (*TokenResponse, error) {
 	accessToken := &models.OAuth2Token{
-		AccessTokenExpiration:    time.Now().UTC().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
-		RefreshTokenExpiration:   time.Now().UTC().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
+		AccessTokenExpiration:    utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.AccessTokenExpiration) * time.Second),
+		RefreshTokenExpiration:   utils.GetCurrentTS().Add(time.Duration(s.config.OAuth2.RefreshTokenExpiration) * time.Second),
 		Scope:        scope,
 		CredentialID: app.ID,
 		AuthenticatedUserID: userID.String(),
@@ -322,7 +323,7 @@ func (s *OAuth2Service) handleRefreshTokenGrant(req *TokenRequest) (*TokenRespon
         return nil, errors.New("invalid refresh token")
     }
 
-    if time.Now().UTC().After(oldToken.RefreshTokenExpiration) {
+    if utils.GetCurrentTS().After(oldToken.RefreshTokenExpiration) {
 		return nil, errors.New("refresh token expired")
 	}
 

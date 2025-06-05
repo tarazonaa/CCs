@@ -9,6 +9,7 @@ import (
 	"auth-service/internal/config"
 	"auth-service/internal/models"
 	"auth-service/internal/services"
+	"auth-service/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -239,8 +240,8 @@ func (h *OAuth2Handler) createToken(c *gin.Context) {
 	token := &models.OAuth2Token{
 		AccessToken:         req.AccessToken,
 		RefreshToken:        req.RefreshToken,
-		AccessTokenExpiration: time.Now().UTC().Add(time.Duration(req.AccessTokenExpiration) * time.Second),
-		RefreshTokenExpiration: time.Now().UTC().Add(time.Duration(req.RefreshTokenExpiration) * time.Second),
+		AccessTokenExpiration: utils.GetCurrentTS().Add(time.Duration(req.AccessTokenExpiration) * time.Second),
+		RefreshTokenExpiration: utils.GetCurrentTS().Add(time.Duration(req.RefreshTokenExpiration) * time.Second),
 		Scope:               req.Scope,
 		AuthenticatedUserID: req.AuthenticatedUserID,
 		CredentialID:        req.Credential.ID,
