@@ -139,10 +139,7 @@ func corsMiddleware() gin.HandlerFunc {
 		origin := c.Request.Header.Get("Origin")
 
 		allowedOrigins := map[string]bool{
-			"http://192.168.200.14:5173": true,
-			"http://localhost:5173": true,
-			"http://127.0.0.1:3000": true,
-			"http://localhost:3001": true,
+			"*":                     true,
 		}
 
 		if allowedOrigins[origin] {
