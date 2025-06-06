@@ -1,13 +1,13 @@
 [Unit]
-Description=AuthService
+Description=ApiService
 After=network.target
 
 [Service]
 User=notch
-ExecStart=/usr/bin/auth
+ExecStart=/usr/bin/api
 Environment="PORT=8080"
 Environment="HOST=0.0.0.0"
-Environment="DATABASE_URL=postgres://postgres:holajorge@localhost:5432/postgres?sslmode=disable"
+Environment="DATABASE_URL=postgres://postgres:holajorge@172.24.0.95:5432/postgres?sslmode=disable"
 Environment="PROVISION_KEY=holaJorge@1234"
 Environment="ACCESS_TOKEN_EXPIRATION=7200"
 Environment="REFRESH_TOKEN_EXPIRATION=1209600"
@@ -17,6 +17,9 @@ Environment="ENABLE_PASSWORD_CREDENTIALS=true"
 Environment="ENABLE_AUTHORIZATION_CODE=true"
 Environment="ENABLE_PKCE=true"
 Environment="PKCE_REQUIRED=false"
+Environment="MINIO_ENDPOINT=172.24.0.189:9000"
+Environment="MINIO_ROOT_USER=CCs-minIO"
+Environment="MINIO_ROOT_PASSWORD=holaJorge@1234"
 Restart=always
 
 [Install]
