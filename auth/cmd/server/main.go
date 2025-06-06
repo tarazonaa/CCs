@@ -4,22 +4,26 @@ import (
 	"auth-service/internal/config"
 	"auth-service/internal/handlers"
 	"auth-service/internal/models"
+	"auth-service/internal/seeds"
 	"auth-service/internal/services"
 	"auth-service/internal/utils"
-	"auth-service/internal/seeds"
+	"context"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"gorm.io/gorm"
 )
 
 var globalDB *gorm.DB
 
 func main() {
+	ctx := context.Background()
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
@@ -27,6 +31,25 @@ func main() {
 	cfg := config.LoadConfig()
 	db := config.InitDatabase(cfg)
 	globalDB = db
+
+	minioClient, err := minio.New(cfg.Minio.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(cfg.Minio.RootUser, cfg.Minio.RootPwd, ""),
+		Secure: false,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	setupMinioClient(minioClient, &ctx)
+
+	buckets, err := minioClient.ListBuckets(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for _, bucket := range buckets {
+		log.Println(bucket.Name)
+	}
 
 	if err := db.AutoMigrate(&models.User{}, &models.Consumer{}, &models.OAuth2Token{}, &models.OAuth2Credential{}, &models.AuthorizationCode{}, &models.Image{}); err != nil {
 		log.Fatal("Migration failed:", err)
@@ -40,7 +63,7 @@ func main() {
 	oauth2Handler := handlers.NewOAuth2Handler(oauth2Service, db, cfg)
 	authHandler := handlers.NewAuthHandler(db)
 	imageService := services.NewImageService(db)
-	imageHandler := handlers.NewImageHandler(imageService)
+	imageHandler := handlers.NewImageHandler(imageService, minioClient)
 
 	router := setupRouter(oauth2Handler, authHandler, imageHandler)
 
@@ -57,6 +80,20 @@ func main() {
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal("Failed to start server:", err)
+	}
+}
+
+func setupMinioClient(client *minio.Client, ctx *context.Context) {
+	err := client.MakeBucket(*ctx, "cc-images", minio.MakeBucketOptions{})
+	if err != nil {
+		exists, errBucketExists := client.BucketExists(*ctx, "cc-images")
+		if errBucketExists == nil && exists {
+			log.Printf("Bucket exists.")
+		} else {
+			log.Fatalln(err)
+		}
+	} else {
+		log.Printf("Successfully created bucket")
 	}
 }
 
@@ -112,6 +149,7 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 			imageGroup.GET("", imageHandler.GetAllImages)
 			imageGroup.GET("/:id", imageHandler.GetImageByID)
 			imageGroup.DELETE("/:id", imageHandler.DeleteImage)
+			imageGroup.GET("/blob/:id", imageHandler.GetBlobFromID)
 			imageGroup.GET("/sent/:sent_image_id", imageHandler.GetImageBySentID)
 			imageGroup.GET("/received/:received_image_id", imageHandler.GetImageByReceivedID)
 		}
@@ -140,9 +178,9 @@ func corsMiddleware() gin.HandlerFunc {
 
 		allowedOrigins := map[string]bool{
 			"http://192.168.200.14:5173": true,
-			"http://localhost:5173": true,
-			"http://127.0.0.1:3000": true,
-			"http://localhost:3001": true,
+			"http://localhost:5173":      true,
+			"http://127.0.0.1:3000":      true,
+			"http://localhost:3001":      true,
 		}
 
 		if allowedOrigins[origin] {
@@ -233,11 +271,11 @@ func listClients(c *gin.Context) {
 
 func createClient(c *gin.Context) {
 	var req struct {
-		Name         string   `json:"name" binding:"required"`
-		ClientID     string   `json:"client_id"`
-		ClientSecret string   `json:"client_secret"`
-		RedirectURIs []string `json:"redirect_uris" binding:"required"`
-		ConsumerID   uuid.UUID   `json:"consumer_id" binding:"required"`
+		Name         string    `json:"name" binding:"required"`
+		ClientID     string    `json:"client_id"`
+		ClientSecret string    `json:"client_secret"`
+		RedirectURIs []string  `json:"redirect_uris" binding:"required"`
+		ConsumerID   uuid.UUID `json:"consumer_id" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
