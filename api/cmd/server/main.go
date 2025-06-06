@@ -146,7 +146,7 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 		imageGroup := apiGroup.Group("/images")
 		{
 			imageGroup.POST("", imageHandler.CreateImage)
-			imageGroup.GET("", imageHandler.GetAllImages)
+			imageGroup.GET("", imageHandler.GetUserImages)
 			imageGroup.GET("/:id", imageHandler.GetImageByID)
 			imageGroup.DELETE("/:id", imageHandler.DeleteImage)
 			imageGroup.GET("/blob/:id", imageHandler.GetBlobFromID)
