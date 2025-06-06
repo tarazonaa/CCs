@@ -1,4 +1,6 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Trash, ArrowsOut } from '@phosphor-icons/react';
 
 interface Drawing {
   id: string;
@@ -15,78 +17,100 @@ interface DrawingPredictionCardProps {
   showActions?: boolean;
 }
 
-const DrawingPredictionCard: React.FC<DrawingPredictionCardProps> = ({ 
-  drawing, 
-  onDelete, 
+const DrawingPredictionCard: React.FC<DrawingPredictionCardProps> = ({
+  drawing,
+  onDelete,
   onClick,
-  showActions = false 
+  showActions = false
 }) => {
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
   return (
-    <div
-      className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 p-4 cursor-pointer"
-      onClick={() => onClick?.(drawing)}
+    <motion.div
+      whileHover={{ y: -5, scale: 1.02 }}
+      transition={{ duration: 0.2 }}
+      className="card-glass overflow-visible"
     >
-      
-      <div className="aspect-square mb-4 relative group">
+      <div 
+        className="relative aspect-square cursor-pointer group"
+        onClick={() => onClick?.(drawing)}
+      >
         <img 
           src={drawing.imageData} 
           alt="Drawing"
-          className="w-full h-full object-contain border border-gray-200 rounded-lg"
+          className="w-full h-full object-contain bg-white rounded-t-apple"
         />
         
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200 rounded-t-apple flex items-center justify-center opacity-0 group-hover:opacity-100">
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-apple"
+          >
+            <ArrowsOut weight="bold" size={18} className="text-primary" />
+          </motion.div>
+        </div>
         
         {showActions && onDelete && (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={(e) => {
               e.stopPropagation();
               onDelete(drawing.id);
             }}
-            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            className="absolute -top-2 -right-2 w-8 h-8 bg-error text-white rounded-full flex items-center justify-center shadow-apple opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
           >
-            ×
-          </button>
+            <Trash weight="bold" size={14} />
+          </motion.button>
         )}
       </div>
         
-      <div className="space-y-2 text-sm">
+      <div className="p-4 space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-gray-500">Prediction:</span>
-          <span className="font-semibold text-lg text-blue-600">
+          <span className="text-text-secondary text-sm">Prediction</span>
+          <span className="font-semibold text-xl text-primary">
             {drawing.prediction || '?'}
           </span>
         </div>
         
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500">Confidence:</span>
-          <div className="flex items-center space-x-2">
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-text-secondary">Confidence</span>
             <span className="font-medium">
               {drawing.confidence 
-                ? `${(drawing.confidence * 100).toFixed(1)}%` 
+                ? `${(drawing.confidence * 100).toFixed(0)}%` 
                 : 'N/A'
               }
             </span>
-        
-            {drawing.confidence && (
-              <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full transition-all duration-300 ${
-                    drawing.confidence > 0.8 ? 'bg-green-500' :
-                    drawing.confidence > 0.6 ? 'bg-yellow-500' : 'bg-red-500'
-                  }`}
-                  style={{ width: `${drawing.confidence * 100}%` }}
-                />
-              </div>
-            )}
+          </div>
+          
+          <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-300 ${
+                !drawing.confidence ? 'bg-gray-300' :
+                drawing.confidence > 0.8 ? 'bg-success' :
+                drawing.confidence > 0.6 ? 'bg-warning' : 'bg-error'
+              }`}
+              style={{ width: `${drawing.confidence ? drawing.confidence * 100 : 0}%` }}
+            />
           </div>
         </div>
         
-        <div className="pt-2 border-t border-gray-100">
-          <span className="text-xs text-gray-400">
-            {drawing.timestamp.toLocaleDateString()} {drawing.timestamp.toLocaleTimeString()}
+        <div className="pt-2 border-t border-border/30">
+          <span className="text-xs text-text-secondary">
+            {formatDate(drawing.timestamp)}
           </span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
