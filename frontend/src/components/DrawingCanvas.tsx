@@ -47,7 +47,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       ctx.stroke();
     }
 
-    // Draw horizontal lines
+
     for (let i = 1; i < 3; i++) {
       ctx.beginPath();
       ctx.moveTo(0, cellHeight * i);
@@ -158,6 +158,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       drawGrid(context);
     }
     setCanvasCleared(true);
+    setCurrBase64Img(""); // clear the current result image if canvas is cleared
   };
 
   const saveDrawing = () => {
@@ -214,8 +215,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       } catch (error: unknown) {
         if (error instanceof Error) {
           console.error("Upload error:", error.message);
+        } else if (typeof error === "object" && error !== null && "response" in error && typeof (error as any).response === "object" && (error as any).response !== null && "data" in (error as any).response) {
+          console.error("Upload error: ", (error as any).response.data);
         } else {
-          console.error("Upload error: ", error?.response?.data);
+          console.error("Unknown upload error:", error);
         }
       } finally {
         const uploadFormData = new FormData();
@@ -271,7 +274,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   return (
     <div className="flex flex-col items-center gap-8">
       {/* Canvas Container */}
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -283,29 +285,58 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
               {t("draw_title")}
             </h2>
           </div>
-          <div
-            className="relative bg-white rounded-apple shadow-apple-md overflow-hidden mx-auto"
-            style={{ width: "280px", height: "280px" }}
-          >
-            <canvas
-              ref={canvasRef}
-              width={280}
-              height={280}
-              style={{ width: "280px", height: "280px" }}
-              className="cursor-crosshair drawing-canvas touch-none"
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchEnd={stopDrawing}
-            />
-            {canvasCleared && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <p className="text-text-tertiary text-sm italic">
-                  {t("draw_here")}
-                </p>
+          
+          {/* Side-by-side canvas and result container */}
+          <div className="flex gap-6 items-start justify-center flex-wrap">
+            {/* Drawing Canvas */}
+            <div className="flex flex-col items-center">
+              <h3 className="text-lg font-medium text-text-primary mb-3">
+                {t("your_drawing") || "Your Drawing"}
+              </h3>
+              <div
+                className="relative bg-white rounded-apple shadow-apple-md overflow-hidden"
+                style={{ width: "280px", height: "280px" }}
+              >
+                <canvas
+                  ref={canvasRef}
+                  width={280}
+                  height={280}
+                  style={{ width: "280px", height: "280px" }}
+                  className="cursor-crosshair drawing-canvas touch-none"
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                />
+                {canvasCleared && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <p className="text-text-tertiary text-sm italic">
+                      {t("draw_here")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Result Image */}
+            {currBase64Img && (
+              <div className="flex flex-col items-center">
+                <h3 className="text-lg font-medium text-text-primary mb-3">
+                  {t("result") || "Result"}
+                </h3>
+                <div 
+                  className="bg-white rounded-apple shadow-apple-md overflow-hidden flex items-center justify-center"
+                  style={{ width: "280px", height: "280px" }}
+                >
+                  <img
+                    src={`data:image/png;base64,${currBase64Img}`}
+                    alt="Processed Drawing"
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -360,6 +391,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
           </div>
         </div>
       </motion.div>
+
       {/* Tips Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -405,19 +437,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
           </div>
         </div>
       </motion.div>
-      {currBase64Img && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2">{t("returned_image")}</h3>
-          <img
-            src={`data:image/png;base64,${currBase64Img}`}
-            alt="Processed Drawing"
-            className="border rounded-lg shadow-md"
-          />
-        </div>
-      )}
     </div>
   );
 };
 
 export default DrawingCanvas;
-
