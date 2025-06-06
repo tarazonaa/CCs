@@ -7,30 +7,54 @@ import { LanguageWrapper } from './LanguageWrapper'
 import NotFound from './pages/NotFound'
 import AuthPage from './pages/AuthPage'
 import { SnackbarProvider } from 'notistack'
+import AppLayout from '@/components/layout/AppLayout'
+import { motion } from 'framer-motion'
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth()
-  const { lng = 'en' } = useParams()
-  return isAuthenticated ? <>{children}</> : <Navigate to={`/${lng}/login`} replace />
-}
+  const { isAuthenticated } = useAuth();
+  const { lng = 'en' } = useParams();
+  return isAuthenticated ? (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {children}
+    </motion.div>
+  ) : (
+    <Navigate to={`/${lng}/login`} replace />
+  );
+};
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth()
-  const { lng = 'en' } = useParams()
-  return !isAuthenticated ? <>{children}</> : <Navigate to={`/${lng}/dashboard`} replace />
-}
+  const { isAuthenticated } = useAuth();
+  const { lng = 'en' } = useParams();
+  return !isAuthenticated ? (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {children}
+    </motion.div>
+  ) : (
+    <Navigate to={`/${lng}/dashboard`} replace />
+  );
+};
 
 const App: React.FC = () => {
   return (
     <SnackbarProvider
       maxSnack={3}
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      autoHideDuration={1000}
+      autoHideDuration={3000}
     >
       <AuthProvider>
         <Router>
-          <div className="min-h-screen bg-gray-50">
+          <div className="min-h-screen bg-background">
             <Routes>
               <Route
                 path="/:lng/login"
@@ -61,7 +85,6 @@ const App: React.FC = () => {
                   />
                 }
               />
-
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
@@ -71,4 +94,4 @@ const App: React.FC = () => {
   )
 }
 
-export default App
+export default App;

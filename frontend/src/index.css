@@ -1,10 +1,184 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Tailwind v4 import */
 @import "tailwindcss";
 
-* {
-  box-sizing: border-box;
+/* Custom CSS variables and theme configuration */
+:root {
+  /* Apple-inspired Color System */
+  --color-primary: 0 122 255; /* Apple Blue */
+  --color-primary-light: 64 156 255;
+  --color-primary-dark: 0 88 208;
+  
+  --color-secondary: 88 86 214; /* Apple Purple */
+  --color-secondary-light: 123 121 255;
+  --color-secondary-dark: 64 63 177;
+  
+  --color-accent: 255 59 48; /* Apple Red */
+  --color-accent-light: 255 100 92;
+  --color-accent-dark: 209 42 33;
+  
+  --color-success: 52 199 89; /* Apple Green */
+  --color-warning: 255 149 0; /* Apple Orange */
+  --color-error: 255 59 48; /* Apple Red */
+  
+  --color-surface: 255 255 255;
+  --color-background: 249 249 249; /* Very light gray */
+  
+  --color-text-primary: 29 29 31; /* Almost black */
+  --color-text-secondary: 110 110 115; /* Medium gray */
+  --color-border: 229 229 234; /* Light gray */
+}
+
+.dark {
+  --color-primary: 10 132 255; /* Dark mode blue */
+  --color-primary-light: 94 197 255;
+  --color-primary-dark: 0 90 194;
+  
+  --color-secondary: 191 90 242; /* Dark mode purple */
+  --color-secondary-light: 218 143 255;
+  --color-secondary-dark: 157 66 202;
+  
+  --color-accent: 255 69 58; /* Dark mode red */
+  --color-accent-light: 255 105 97;
+  --color-accent-dark: 204 47 38;
+  
+  --color-success: 48 209 88; /* Dark mode green */
+  --color-warning: 255 159 10; /* Dark mode orange */
+  --color-error: 255 69 58; /* Dark mode red */
+  
+  --color-surface: 28 28 30; /* Dark gray */
+  --color-background: 0 0 0; /* Black */
+  
+  --color-text-primary: 255 255 255; /* White */
+  --color-text-secondary: 174 174 178; /* Light gray */
+  --color-border: 44 44 46; /* Dark gray */
 }
 
 body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background-color: rgb(var(--color-background));
+  color: rgb(var(--color-text-primary));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Apple-style component utilities */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary), 0.5);
+}
+
+.btn-primary {
+  background-color: rgb(var(--color-primary));
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: rgb(var(--color-primary-light));
+}
+
+.btn-secondary {
+  background-color: rgb(var(--color-secondary));
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: rgb(var(--color-secondary-light));
+}
+
+.btn-success {
+  background-color: rgb(var(--color-success));
+  color: white;
+}
+
+.btn-success:hover {
+  opacity: 0.9;
+}
+
+.btn-error {
+  background-color: rgb(var(--color-error));
+  color: white;
+}
+
+.btn-error:hover {
+  opacity: 0.9;
+}
+
+.btn-outline {
+  border: 1px solid rgb(var(--color-border));
+  background-color: transparent;
+}
+
+.btn-outline:hover {
+  background-color: rgb(var(--color-background));
+}
+
+.card {
+  background-color: rgb(var(--color-surface));
+  border-radius: 0.85rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid rgb(var(--color-border));
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.card-glass {
+  background-color: rgba(var(--color-surface), 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.85rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(var(--color-border));
+  background-color: rgb(var(--color-surface));
+  transition: all 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary), 0.3);
+  border-color: rgb(var(--color-primary));
+}
+
+.drawing-canvas {
+  touch-action: none;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(var(--color-border), 0.5);
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.3s ease-out;
 }

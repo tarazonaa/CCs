@@ -6,38 +6,52 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'San Francisco',
+          'Segoe UI',
+          'Roboto',
+          'Helvetica Neue',
+          'sans-serif',
+        ],
+      },
       colors: {
         primary: {
-          DEFAULT: '#3b82f6',
-          light: '#93c5fd',
-          dark: '#1d4ed8',
+          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)',
+          light: 'rgb(var(--color-primary-light) / <alpha-value>)',
+          dark: 'rgb(var(--color-primary-dark) / <alpha-value>)',
         },
         secondary: {
-          DEFAULT: '#8b5cf6',
-          light: '#a78bfa',
-          dark: '#6d28d9',
+          DEFAULT: 'rgb(var(--color-secondary) / <alpha-value>)',
+          light: 'rgb(var(--color-secondary-light) / <alpha-value>)',
+          dark: 'rgb(var(--color-secondary-dark) / <alpha-value>)',
         },
         accent: {
-          DEFAULT: '#f59e0b',
-          light: '#fcd34d',
-          dark: '#d97706',
+          DEFAULT: 'rgb(var(--color-accent) / <alpha-value>)',
+          light: 'rgb(var(--color-accent-light) / <alpha-value>)',
+          dark: 'rgb(var(--color-accent-dark) / <alpha-value>)',
         },
-        success: '#10b981',
-        warning: '#f59e0b',
-        error: '#ef4444',
-        surface: '#ffffff',
-        background: '#f9fafb',
+        success: 'rgb(var(--color-success) / <alpha-value>)',
+        warning: 'rgb(var(--color-warning) / <alpha-value>)',
+        error: 'rgb(var(--color-error) / <alpha-value>)',
+        surface: 'rgb(var(--color-surface) / <alpha-value>)',
+        background: 'rgb(var(--color-background) / <alpha-value>)',
         text: {
-          primary: '#111827',
-          secondary: '#6b7280',
+          primary: 'rgb(var(--color-text-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--color-text-secondary) / <alpha-value>)',
+          tertiary: 'rgb(var(--color-text-tertiary) / <alpha-value>)',
         },
-        border: '#e5e7eb',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
       },
-      animation: {
-        'spin-slow': 'spin 3s linear infinite',
+      borderRadius: {
+        'apple': '0.85rem',
       },
-      backdropBlur: {
-        xs: '2px',
+      boxShadow: {
+        'apple': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        'apple-md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'apple-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
       },
     },
   },
