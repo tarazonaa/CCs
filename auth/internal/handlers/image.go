@@ -2,20 +2,25 @@ package handlers
 
 import (
 	"auth-service/internal/services"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
 )
 
 type ImageHandler struct {
 	imageService *services.ImageService
+	MinioClient  *minio.Client
 }
 
-func NewImageHandler(imageService *services.ImageService) *ImageHandler {
+func NewImageHandler(imageService *services.ImageService, minioClient *minio.Client) *ImageHandler {
 	return &ImageHandler{
 		imageService: imageService,
+		MinioClient:  minioClient,
 	}
 }
 
@@ -32,29 +37,92 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	var req services.CreateImageRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request: " + err.Error()})
-		return
-	}
+	sentID := uuid.New()
+	receivedID := uuid.New()
 
-	// Validate that both image IDs are provided
-	if req.SentImageID == nil || req.ReceivedImageID == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "both sent_image_id and received_image_id are required"})
-		return
-	}
-
-	response, err := h.imageService.CreateImage(userID, &req)
+	image, err := h.imageService.CreateImage(userID, &services.CreateImageRequest{
+		SentImageID:     &sentID,
+		ReceivedImageID: &receivedID,
+	})
 	if err != nil {
-		if err.Error() == "user not found" {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to create image",
+		})
+	}
+
+	originalHeader, err := c.FormFile("original_image")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "original_image is required"})
+		return
+	}
+	originalFile, _ := originalHeader.Open()
+	defer originalFile.Close()
+
+	_, err = h.MinioClient.PutObject(
+		c.Request.Context(),
+		"cc-images",
+		fmt.Sprintf("%s.png", sentID),
+		originalFile,
+		originalHeader.Size,
+		minio.PutObjectOptions{ContentType: originalHeader.Header.Get("Content-Type")},
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload original image"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, response)
+	inferenceHeader, err := c.FormFile("inference_image")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "inference_image is required"})
+		return
+	}
+	inferenceFile, _ := inferenceHeader.Open()
+	defer inferenceFile.Close()
+
+	_, err = h.MinioClient.PutObject(
+		c.Request.Context(),
+		"cc-images",
+		fmt.Sprintf("%s.png", receivedID),
+		inferenceFile,
+		inferenceHeader.Size,
+		minio.PutObjectOptions{ContentType: inferenceHeader.Header.Get("Content-Type")},
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload inference image"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message":           "Record and images created",
+		"id":                image.ID,
+		"sent_image_id":     sentID,
+		"received_image_id": receivedID,
+	})
+}
+
+func (h *ImageHandler) GetBlobFromID(c *gin.Context) {
+	imageID := c.Param("id")
+	objectName := fmt.Sprintf("%s.png", imageID)
+	obj, err := h.MinioClient.GetObject(
+		c.Request.Context(),
+		"cc-images",
+		objectName,
+		minio.GetObjectOptions{},
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get image"})
+		return
+	}
+
+	stat, err := obj.Stat()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "image not found"})
+		return
+	}
+
+	c.Header("Content-Type", stat.ContentType)
+	c.Header("Content-Length", fmt.Sprintf("%d", stat.Size))
+	io.Copy(c.Writer, obj)
 }
 
 func (h *ImageHandler) GetAllImages(c *gin.Context) {

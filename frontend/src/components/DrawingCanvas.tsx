@@ -2,6 +2,13 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import { motion } from 'framer-motion';
+import { 
+  Trash, 
+  FloppyDisk,
+  Info,
+  DotsNineIcon as Grid
+} from '@phosphor-icons/react';
 
 interface DrawingCanvasProps {
   onDrawingComplete: (imageData: string) => void;
@@ -14,6 +21,40 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const { enqueueSnackbar } = useSnackbar();
   const { t } = useTranslation();
+  const [canvasCleared, setCanvasCleared] = useState(true);
+  const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
+  const [showGrid, setShowGrid] = useState(false);
+
+  const drawGrid = (ctx: CanvasRenderingContext2D) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const cellWidth = w / 3;
+    const cellHeight = h / 3;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.lineWidth = 1;
+
+    // Draw vertical lines
+    for (let i = 1; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(cellWidth * i, 0);
+      ctx.lineTo(cellWidth * i, h);
+      ctx.stroke();
+    }
+
+    // Draw horizontal lines
+    for (let i = 1; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, cellHeight * i);
+      ctx.lineTo(w, cellHeight * i);
+      ctx.stroke();
+    }
+    ctx.restore();
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -22,33 +63,68 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       if (ctx) {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = 'black';
+        ctx.strokeStyle = '#000000';
         ctx.lineWidth = 8;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         setContext(ctx);
+        setCanvasCleared(true);
+        if (showGrid) {
+          drawGrid(ctx);
+        }
       }
     }
-  }, []);
+  }, [showGrid]);
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!context) return;
+  const getCoordinates = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement> | TouchEvent | MouseEvent
+  ): { x: number, y: number } => {
+    if (!canvasRef.current) return { x: 0, y: 0 };
     
+    const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
+    
+    let clientX: number, clientY: number;
+    
+    if ('touches' in e) {
+      if (e.touches.length === 0) {
+        return lastPos;
+      }
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    
+    setLastPos({ x, y });
+    
+    return { x, y };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!context) return;
     setIsDrawing(true);
-    const rect = canvasRef.current!.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    setCanvasCleared(false);
+    
+    const { x, y } = getCoordinates(e);
     
     context.beginPath();
     context.moveTo(x, y);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !context) return;
     
-    const rect = canvasRef.current!.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    if ('touches' in e) {
+      e.preventDefault();
+    }
+    
+    const { x, y } = getCoordinates(e);
     
     context.lineTo(x, y);
     context.stroke();
@@ -62,20 +138,21 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
 
   const clearCanvas = () => {
     if (!context || !canvasRef.current) return;
-    
     context.fillStyle = 'white';
     context.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    if (showGrid) {
+      drawGrid(context);
+    }
+    setCanvasCleared(true);
   };
 
   const saveDrawing = () => {
-    if (!canvasRef.current) return;
-    
+    if (!canvasRef.current || canvasCleared) return;
+
     let canvasImg = canvasRef.current.toDataURL();
     onDrawingComplete(canvasImg);
 
     const originalCanvas = canvasRef.current;
-
-    // Create a resized 112x112 canvas
     const resizedCanvas = document.createElement('canvas');
     resizedCanvas.width = 112;
     resizedCanvas.height = 112;
@@ -86,35 +163,23 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       return;
     }
 
-    // Draw the original image resized
     ctx.drawImage(originalCanvas, 0, 0, 112, 112);
-
-    // Get the pixel data
     const imageData = ctx.getImageData(0, 0, 112, 112);
     const data = imageData.data;
 
-    // Convert to grayscale and invert colors
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-
-      // Grayscale: average the RGB values
       const gray = (r + g + b) / 3;
-
-      // Invert grayscale value (255 - gray)
       const inverted = 255 - gray;
-
-      data[i] = inverted;     // Red
-      data[i + 1] = inverted; // Green
-      data[i + 2] = inverted; // Blue
-      // Alpha stays the same (data[i + 3])
+      data[i] = inverted;
+      data[i + 1] = inverted;
+      data[i + 2] = inverted;
     }
 
-    // Put the processed image back to the canvas
     ctx.putImageData(imageData, 0, 0);
 
-    // Export as JPEG and upload
     resizedCanvas.toBlob(async (blob) => {
       if (!blob) {
         console.error("Failed to convert processed canvas to Blob.");
@@ -147,52 +212,142 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     }, 'image/jpeg');
   };
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDrawing) {
+        e.preventDefault();
+      }
+    };
+    
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    
+    return () => {
+      canvas.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [isDrawing]);
 
   return (
-    <div className="flex flex-col items-center space-y-8">
+    <div className="flex flex-col items-center gap-8">
       {/* Canvas Container */}
-      <div className="bg-white rounded-2xl shadow-lg p-6">
-        <canvas
-          ref={canvasRef}
-          width={280}
-          height={280}
-          className="border-2 border-gray-300 rounded-lg cursor-crosshair hover:border-blue-400 transition-colors duration-200"
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-        />
-      </div>
-    
-      <div className="flex space-x-4">
-        <button
-          onClick={clearCanvas}
-          className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-        >
-          Clear Canvas
-        </button>
-        <button
-          onClick={saveDrawing}
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
-        >
-          Save Drawing
-        </button>
-      </div>
-      
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md text-center">
-        <p className="text-blue-800 text-sm">
-          Draw a digit (0-9) in the canvas above, then click "Save Drawing" to add it to your history.
-        </p>
-      </div>
-    {
-      // Returned image is a base64 string
-      currBase64Img && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2">Returned Image:</h3>
-          <img src={`data:image/png;base64,${currBase64Img}`} alt="Processed Drawing" className="border rounded-lg shadow-md" />
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="card-glass p-6">
+          <div className="mb-6 text-center">
+            <h2 className="text-xl font-semibold text-text-primary">Draw a Digit (0-9)</h2>
+          </div>
+          <div className="relative bg-white rounded-apple shadow-apple-md overflow-hidden mx-auto" style={{ width: '280px', height: '280px' }}>
+            <canvas
+              ref={canvasRef}
+              width={280}
+              height={280}
+              style={{ width: '280px', height: '280px' }}
+              className="cursor-crosshair drawing-canvas touch-none"
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+            />
+            {canvasCleared && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <p className="text-text-tertiary text-sm italic">Draw here</p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-center mt-6 space-x-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setShowGrid(!showGrid);
+                if (context) {
+                  context.fillStyle = 'white';
+                  context.fillRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+                  if (!showGrid) {
+                    drawGrid(context);
+                  }
+                }
+              }}
+              className="btn flex items-center space-x-2 bg-surface-secondary hover:bg-surface-secondary-hover text-text-primary"
+            >
+              <Grid weight="bold" size={16} />
+              <span>{showGrid ? 'Hide Grid' : 'Show Grid'}</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={clearCanvas}
+              className="btn flex items-center space-x-2 bg-surface-secondary hover:bg-surface-secondary-hover text-text-primary"
+            >
+              <Trash weight="bold" size={16} />
+              <span>Clear</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={saveDrawing}
+              disabled={canvasCleared}
+              className={`btn flex items-center space-x-2 ${
+                canvasCleared 
+                  ? 'bg-surface-disabled text-text-disabled cursor-not-allowed' 
+                  : 'bg-green-500 text-white hover:bg-green-600'
+              }`}
+            >
+              <FloppyDisk weight="bold" size={16} />
+              <span>Save</span>
+            </motion.button>
+          </div>
         </div>
-      )
-    }
+      </motion.div>
+
+      {/* Tips Card */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="w-full max-w-md"
+      >
+        <div className="card-glass p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Info weight="bold" size={20} className="text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold text-text-primary">Drawing Tips</h3>
+          </div>
+          
+          <ul className="space-y-3 text-text-secondary">
+            <li className="flex items-start space-x-2">
+              <span className="inline-block w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center mt-0.5">1</span>
+              <span>Draw a clear digit (0-9) in the center of the canvas</span>
+            </li>
+            <li className="flex items-start space-x-2">
+              <span className="inline-block w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center mt-0.5">2</span>
+              <span>Make it large enough to fill most of the drawing area</span>
+            </li>
+            <li className="flex items-start space-x-2">
+              <span className="inline-block w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center mt-0.5">3</span>
+              <span>Click "Save" to add your drawing to your history</span>
+            </li>
+          </ul>
+
+          <div className="mt-6 p-4 rounded-lg bg-primary/5 border border-primary/10">
+            <p className="text-text-secondary text-sm">
+              After saving, your drawing will be processed by our AI to recognize the digit you've drawn.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
     </div>
   );
 };
