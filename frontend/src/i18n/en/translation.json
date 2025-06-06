@@ -11,6 +11,7 @@
   "sign_up_button": "Sign Up",
   "signup_to_continue": "Sign up to continue",
   "welcome_back": "Welcome Back",
+  "welcome": "Welcome",
   "forgot_password": "Forgot password?",
   "dont_have_account": "Don't have an account?",
   "sign_up_now": "Sign up now",
@@ -34,5 +35,6 @@
   "full_name_placeholder": "Full name",
   "username_placeholder": "Username",
   "confirm_password": "Confirm your password",
-  "already_have_account": "Already have an account?"
+  "already_have_account": "Already have an account?",
+  "drawing_saved": "Drawing saved successfully!"
 }

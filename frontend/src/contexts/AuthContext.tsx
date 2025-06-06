@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useSnackbar } from 'notistack'
+import { useTranslation } from 'react-i18next'
 import type React from 'react'
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
@@ -36,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
 
   const { enqueueSnackbar } = useSnackbar()
+  const { t } = useTranslation()
 
   const checkSession = useCallback(async () => {
     const token = localStorage.getItem('access_token')
@@ -91,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('access_token', res.data.access_token)
         localStorage.setItem('refresh_token', res.data.refresh_token)
         const user = await checkSession()
-        enqueueSnackbar(`Welcome ${user?.username}`, {
+        enqueueSnackbar(`${t('welcome')}, ${user?.username}`, {
           variant: 'success',
         })
       })

@@ -11,6 +11,7 @@
   "sign_up_button": "Registrarse",
   "signup_to_continue": "Regístrate para continuar",
   "welcome_back": "Bienvenido de nuevo",
+  "welcome": "Bienvenido",
   "forgot_password": "¿Olvidaste tu contraseña?",
   "dont_have_account": "¿No tienes una cuenta?",
   "sign_up_now": "Regístrate ahora",
@@ -34,5 +35,6 @@
   "username_placeholder": "Nombre de usuario",
   "full_name_placeholder": "Nombre completo",
   "confirm_password": "Confirma tu contraseña",
-  "already_have_account": "¿Ya tienes una cuenta?"
+  "already_have_account": "¿Ya tienes una cuenta?",
+  "drawing_saved": "¡Dibujo guardado exitosamente!"
 }

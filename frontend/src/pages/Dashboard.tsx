@@ -10,18 +10,18 @@ import {
   User, 
   BracketsCurly 
 } from '@phosphor-icons/react';
+import axios from 'axios';
 
-export interface Drawing {
-  id: string
-  imageData: string
-  prediction?: string
-  confidence?: number
-  timestamp: Date
+export interface ImageMetadata {
+  
+  sent_image_id: string
+  received_image_id: string
+  created_at: Date
 }
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
-  const [drawings, setDrawings] = useState<Drawing[]>([]);
+  const [imagesData, setImagesData] = useState<ImageMetadata[]>([]);
   const [activeTab, setActiveTab] = useState<'draw' | 'history'>('draw');
   const location = useLocation();
 
@@ -35,18 +35,18 @@ const Dashboard: React.FC = () => {
   }, [location.hash]);
 
   const handleDrawingComplete = (imageData: string) => {
-    const newDrawing: Drawing = {
-      id: Date.now().toString(),
-      imageData,
-      timestamp: new Date(),
-      prediction: '?',
-      confidence: 0,
-    };
-    setDrawings((prev) => [newDrawing, ...prev]);
+    // const newDrawing: Drawing = {
+    //   id: Date.now().toString(),
+    //   imageData,
+    //   timestamp: new Date(),
+    //   prediction: '?',
+    //   confidence: 0,
+    // };
+    // setDrawings((prev) => [newDrawing, ...prev]);
   };
 
   const clearHistory = () => {
-    setDrawings([]);
+  //   setDrawings([]);
   };
 
   const containerVariants = {
@@ -78,6 +78,26 @@ const Dashboard: React.FC = () => {
       transition: { duration: 0.2 }
     }
   };
+
+
+  useEffect(() => {
+    axios.get(`${import.meta.env.VITE_AUTH_ENDPOINT}/api/v1/images`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    }).then(response => {
+      const fetchedImagesData: ImageMetadata[] = response.data.data.map((item: ImageMetadata) => ({
+        sent_image_id: item.sent_image_id,
+        received_image_id: item.received_image_id,
+        created_at: item.created_at
+      }));
+      setImagesData(fetchedImagesData);
+    }).catch(error => {
+      console.error('Error fetching images data:', error);
+      // Optionally handle error state here
+    });
+  }, []);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,7 +156,7 @@ const Dashboard: React.FC = () => {
               }`}
             >
               <ClockCounterClockwise weight="bold" size={18} />
-              <span>History ({drawings.length})</span>
+              <span>History ({imagesData.length})</span>
               {activeTab === 'history' && (
                 <motion.div
                   layoutId="activeTab"
@@ -176,7 +196,7 @@ const Dashboard: React.FC = () => {
             >
               <motion.div variants={itemVariants}>
                 <DrawingHistory 
-                  drawings={drawings} 
+                  imagesData={imagesData} 
                   onClearHistory={clearHistory} 
                 />
               </motion.div>

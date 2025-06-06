@@ -1,27 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Trash, ImageSquare } from '@phosphor-icons/react';
+import { ImageMetadata } from '@/pages/Dashboard';
+import axios from 'axios';
 
-interface Drawing {
-  id: string;
-  imageData: string;
-  prediction?: string;
-  confidence?: number;
-  timestamp: Date;
-}
 
 interface DrawingHistoryProps {
-  drawings: Drawing[];
+  imagesData: ImageMetadata[];
   onClearHistory: () => void;
   onDeleteDrawing?: (id: string) => void;
-  onDrawingClick?: (drawing: Drawing) => void;
+  // onDrawingClick?: (drawing: Drawing) => void;
 }
 
 const DrawingHistory: React.FC<DrawingHistoryProps> = ({
-  drawings,
+  imagesData,
   onClearHistory,
   onDeleteDrawing,
-  onDrawingClick
+  // onDrawingClick
 }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -43,7 +38,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
     }
   };
 
-  if (drawings.length === 0) {
+  if (imagesData.length === 0) {
     return (
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -77,7 +72,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
         <div>
           <h2 className="text-2xl font-semibold text-text-primary">Drawing History</h2>
           <p className="text-text-secondary mt-1">
-            {drawings.length} drawing{drawings.length !== 1 ? 's' : ''}
+            {imagesData.length} drawing{imagesData.length !== 1 ? 's' : ''}
           </p>
         </div>
         <motion.button
@@ -98,8 +93,27 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
         animate="visible"
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
       >
-        {drawings.map((drawing) => (
-          <motion.div key={drawing.id} variants={itemVariants}>
+        {imagesData.map( async (imgData, i) =>  {
+            const fetchImageBlob = async (imageId: string) => {
+              try {
+              const res = await axios.get(`${import.meta.env.VITE_AUTH_ENDPOINT}/api/v1/images/blob/${imageId}`, {
+                headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                }
+
+              })
+              return URL.createObjectURL(new Blob([res.data], { type: 'image/png' }));
+            } catch (error) {
+              console.error('Error fetching image blob:', error);
+              return imageId; // Fallback to imageId if fetch fails
+            }
+            }
+
+          let sentImageSrc = `${import.meta.env.VITE_AUTH_ENDPOINT}/api/v1/images/blob/${imgData.sent_image_id}`;
+          let receivedImageSrc = `${import.meta.env.VITE_AUTH_ENDPOINT}/api/v1/images/blob/${imgData.received_image_id}`;
+          sentImageSrc = await fetchImageBlob(imgData.sent_image_id) || sentImageSrc;
+          receivedImageSrc = await fetchImageBlob(imgData.received_image_id) || receivedImageSrc;
+          return <motion.div key={i} variants={itemVariants}>
             <div className="card-glass p-4">
               <div className="flex flex-col space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -108,7 +122,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
                     <p className="text-sm font-medium text-text-secondary">Original</p>
                     <div className="bg-white rounded-lg p-2 shadow-sm">
                       <img 
-                        src={drawing.imageData} 
+                        src={sentImageSrc}
                         alt="Original drawing" 
                         className="w-full aspect-square object-contain"
                       />
@@ -120,7 +134,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
                     <p className="text-sm font-medium text-text-secondary">Segmentation</p>
                     <div className="bg-white rounded-lg p-2 shadow-sm">
                       <img 
-                        src={drawing.imageData} 
+                        src={receivedImageSrc}
                         alt="Segmentation" 
                         className="w-full aspect-square object-contain"
                       />
@@ -135,7 +149,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => onDeleteDrawing(drawing.id)}
+                      // onClick={() => onDeleteDrawing(drawing.id)}
                       className="text-error hover:text-error-dark transition-colors"
                     >
                       <Trash weight="bold" size={16} />
@@ -144,8 +158,8 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
                 </div>
               </div>
             </div>
-          </motion.div>
-        ))}
+          </motion.div>}
+        )}
       </motion.div>
     </div>
   );
