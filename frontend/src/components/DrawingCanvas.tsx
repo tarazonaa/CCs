@@ -15,6 +15,7 @@ interface DrawingCanvasProps {
 const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [currBase64Img, setCurrBase64Img] = useState<string | null>(null);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [canvasCleared, setCanvasCleared] = useState(true);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
@@ -187,6 +188,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       try {
         const response = await axios.post('https://10.49.12.47:8443/api/v1/inference', formData);
         console.log('Upload success:', response.data);
+        setCurrBase64Img(response.data.segmentation_base64); // Assuming the response contains the image URL
       } catch (error: any) {
         console.error('Upload error:', error?.response?.data || error.message);
       }
@@ -213,6 +215,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   return (
     <div className="flex flex-col items-center gap-8">
       {/* Canvas Container */}
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -327,6 +330,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
           </div>
         </div>
       </motion.div>
+
     </div>
   );
 };

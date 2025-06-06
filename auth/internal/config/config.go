@@ -11,6 +11,13 @@ type Config struct {
 	DatabaseURL  string
 	OAuth2       OAuth2Config
 	ProvisionKey string
+	Minio        MinioConfig
+}
+
+type MinioConfig struct {
+	Endpoint string
+	RootUser string
+	RootPwd  string
 }
 
 type OAuth2Config struct {
@@ -42,6 +49,12 @@ func LoadConfig() *Config {
 		Host:         getEnv("HOST", "0.0.0.0"),
 		DatabaseURL:  getEnv("DATABASE_URL", ""),
 		ProvisionKey: getEnv("PROVISION_KEY", generateProvisionKey()),
+
+		Minio: MinioConfig{
+			Endpoint: getEnv("MINIO_ENDPOINT", "localhost:9000"),
+			RootUser: getEnv("MINIO_ROOT_USER", "CCs-minIO"),
+			RootPwd:  getEnv("MINIO_ROOT_PASSWORD", "holaJorge@1234"),
+		},
 
 		OAuth2: OAuth2Config{
 			AccessTokenExpiration:  getEnvAsInt("ACCESS_TOKEN_EXPIRATION", 7200),
