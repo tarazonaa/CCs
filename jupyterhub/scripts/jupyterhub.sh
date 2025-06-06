@@ -7,4 +7,5 @@ sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml helm repo update
 sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml helm upgrade --cleanup-on-fail \
   --install jupyter jupyterhub/jupyterhub \
   --namespace jupyter \
-  --create-namespace
+  --create-namespace \
+  --values values.yaml
