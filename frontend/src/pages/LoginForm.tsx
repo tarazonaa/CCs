@@ -95,7 +95,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ switchToSignup }) => {
             whileFocus={{ scale: 1.01 }}
             type="email"
             id="email"
-            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+            pattern="[a-z0-9._%\+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
