@@ -39,14 +39,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
     ctx.lineWidth = 1;
 
-    // Draw vertical lines
     for (let i = 1; i < 3; i++) {
       ctx.beginPath();
       ctx.moveTo(cellWidth * i, 0);
       ctx.lineTo(cellWidth * i, h);
       ctx.stroke();
     }
-
 
     for (let i = 1; i < 3; i++) {
       ctx.beginPath();
@@ -70,12 +68,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
         ctx.lineJoin = "round";
         setContext(ctx);
         setCanvasCleared(true);
-        if (showGrid) {
-          drawGrid(ctx);
-        }
       }
     }
-  }, [showGrid]);
+  }, []);
 
   const getCoordinates = (
     e:
@@ -158,7 +153,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       drawGrid(context);
     }
     setCanvasCleared(true);
-    setCurrBase64Img(""); // clear the current result image if canvas is cleared
+    setCurrBase64Img(""); // clearing res when canvas is cleaned
   };
 
   const saveDrawing = () => {
@@ -311,6 +306,21 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
                   onTouchMove={draw}
                   onTouchEnd={stopDrawing}
                 />
+                
+
+                {showGrid && (
+                  <div 
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      backgroundImage: `
+                        linear-gradient(to right, transparent calc(33.33% - 0.5px), rgba(200, 200, 200, 0.7) calc(33.33% - 0.5px), rgba(200, 200, 200, 0.7) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(200, 200, 200, 0.7) calc(66.66% - 0.5px), rgba(200, 200, 200, 0.7) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px)),
+                        linear-gradient(to bottom, transparent calc(33.33% - 0.5px), rgba(200, 200, 200, 0.7) calc(33.33% - 0.5px), rgba(200, 200, 200, 0.7) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(200, 200, 200, 0.7) calc(66.66% - 0.5px), rgba(200, 200, 200, 0.7) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px))
+                      `,
+                      backgroundSize: '100% 100%'
+                    }}
+                  />
+                )}
+                
                 {canvasCleared && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <p className="text-text-tertiary text-sm italic">
@@ -321,7 +331,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
               </div>
             </div>
 
-            {/* Result Image */}
             {currBase64Img && (
               <div className="flex flex-col items-center">
                 <h3 className="text-lg font-medium text-text-primary mb-3">
@@ -345,21 +354,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setShowGrid(!showGrid);
-                if (context) {
-                  context.fillStyle = "white";
-                  context.fillRect(
-                    0,
-                    0,
-                    canvasRef.current!.width,
-                    canvasRef.current!.height,
-                  );
-                  if (!showGrid) {
-                    drawGrid(context);
-                  }
-                }
-              }}
+              onClick={() => setShowGrid(!showGrid)}
               className="btn flex items-center space-x-2 bg-surface-secondary hover:bg-surface-secondary-hover text-text-primary"
             >
               <Grid weight="bold" size={16} />
