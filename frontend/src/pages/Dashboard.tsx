@@ -1,8 +1,15 @@
-import type React from 'react'
-import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import DrawingCanvas from '@/components/DrawingCanvas'
-import DrawingHistory from '@/components/DrawingHistory'
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import DrawingCanvas from '@/components/DrawingCanvas';
+import DrawingHistory from '@/components/DrawingHistory';
+import { 
+  PencilSimple, 
+  ClockCounterClockwise, 
+  User, 
+  BracketsCurly 
+} from '@phosphor-icons/react';
 
 export interface Drawing {
   id: string
@@ -13,9 +20,19 @@ export interface Drawing {
 }
 
 const Dashboard: React.FC = () => {
-  const { user, logout } = useAuth()
-  const [drawings, setDrawings] = useState<Drawing[]>([])
-  const [activeTab, setActiveTab] = useState<'draw' | 'history'>('draw')
+  const { user, logout } = useAuth();
+  const [drawings, setDrawings] = useState<Drawing[]>([]);
+  const [activeTab, setActiveTab] = useState<'draw' | 'history'>('draw');
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if URL hash is #history and update activeTab
+    if (location.hash === '#history') {
+      setActiveTab('history');
+    } else {
+      setActiveTab('draw');
+    }
+  }, [location.hash]);
 
   const handleDrawingComplete = (imageData: string) => {
     const newDrawing: Drawing = {
@@ -24,72 +41,151 @@ const Dashboard: React.FC = () => {
       timestamp: new Date(),
       prediction: '?',
       confidence: 0,
-    }
-
-    setDrawings((prev) => [newDrawing, ...prev])
-  }
+    };
+    setDrawings((prev) => [newDrawing, ...prev]);
+  };
 
   const clearHistory = () => {
-    setDrawings([])
-  }
+    setDrawings([]);
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        duration: 0.3,
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    },
+    exit: { 
+      opacity: 0,
+      transition: { duration: 0.2 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { duration: 0.3 }
+    },
+    exit: { 
+      y: -20, 
+      opacity: 0,
+      transition: { duration: 0.2 }
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-600">Welcome, {user?.username}</span>
-              <button
-                type="button"
-                onClick={logout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-              >
-                Logout
-              </button>
+    <div className="min-h-screen bg-background">
+      <header className="pt-6 px-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex justify-between items-start"
+        >
+          <div>
+            <h1 className="text-3xl font-semibold text-text-primary">Dashboard</h1>
+            <p className="text-text-secondary mt-1">Welcome, {user?.username || 'Artist'}</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={logout}
+              className="flex items-center space-x-1 px-4 py-2 bg-primary text-black rounded-lg shadow-lg transition-all duration-300 hover:bg-primary/90 mt-3"
+            >
+              <User weight="bold" size={18} />
+              <span>Logout</span>
+            </motion.button>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 bg-surface/50 backdrop-blur-sm rounded-xl p-2 shadow-lg">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveTab('draw')}
+              className={`relative flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                activeTab === 'draw' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105' 
+                  : 'text-text-secondary hover:text-text-primary hover:bg-background/80'
+              }`}
+            >
+              <PencilSimple weight="bold" size={18} />
+              <span>Draw</span>
+              {activeTab === 'draw' && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg -z-10"
+                  initial={false}
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveTab('history')}
+              className={`relative flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                activeTab === 'history' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105' 
+                  : 'text-text-secondary hover:text-text-primary hover:bg-background/80'
+              }`}
+            >
+              <ClockCounterClockwise weight="bold" size={18} />
+              <span>History ({drawings.length})</span>
+              {activeTab === 'history' && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg -z-10"
+                  initial={false}
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </motion.button>
+            
             </div>
           </div>
-        </div>
+        </motion.div>
       </header>
 
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            <button
-              type="button"
-              onClick={() => setActiveTab('draw')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                activeTab === 'draw'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+      <main className="max-w-7xl mx-auto px-8 py-8">
+        <AnimatePresence mode="wait">
+          {activeTab === 'draw' ? (
+            <motion.div
+              key="draw"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
             >
-              Draw
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('history')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                activeTab === 'history'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              <motion.div variants={itemVariants}>
+                <DrawingCanvas onDrawingComplete={handleDrawingComplete} />
+              </motion.div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="history"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
             >
-              History ({drawings.length})
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'draw' && <DrawingCanvas onDrawingComplete={handleDrawingComplete} />}
-        {activeTab === 'history' && (
-          <DrawingHistory drawings={drawings} onClearHistory={clearHistory} />
-        )}
+              <motion.div variants={itemVariants}>
+                <DrawingHistory 
+                  drawings={drawings} 
+                  onClearHistory={clearHistory} 
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
