@@ -203,12 +203,14 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       const formData = new FormData();
       formData.append("image", blob, "processed.jpg");
 
+      let newBase64Img = "";
       try {
         const response = await axios.post(
           "https://10.49.12.47:8443/api/v1/inference",
           formData,
         );
-        setCurrBase64Img(response.data.segmentation_base64); // Assuming the response contains the image URL
+        newBase64Img = response.data.segmentation_base64; 
+        setCurrBase64Img(newBase64Img); 
       } catch (error: unknown) {
         if (error instanceof Error) {
           console.error("Upload error:", error.message);
@@ -219,7 +221,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
         const uploadFormData = new FormData();
         uploadFormData.append("original_image", blob, "original.jpg");
         // Convert the base64 image to a Blob
-        const byteString = atob(currBase64Img);
+        const byteString = atob(newBase64Img);
         const ab = new ArrayBuffer(byteString.length);
         const ia = new Uint8Array(ab);
         for (let i = 0; i < byteString.length; i++) {
