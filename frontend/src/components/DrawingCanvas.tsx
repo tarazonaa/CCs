@@ -309,7 +309,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
           </div>
         </div>
       </motion.div>
-
       {/* Tips Card */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -327,15 +326,15 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
           
           <ul className="space-y-3 text-text-secondary">
             <li className="flex items-start space-x-2">
-              <span className="inline-block w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center mt-0.5">1</span>
+              <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center mt-0.5">1</span>
               <span>Draw a clear digit (0-9) in the center of the canvas</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="inline-block w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center mt-0.5">2</span>
+              <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center mt-0.5">2</span>
               <span>Make it large enough to fill most of the drawing area</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="inline-block w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center mt-0.5">3</span>
+              <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center mt-0.5">3</span>
               <span>Click "Save" to add your drawing to your history</span>
             </li>
           </ul>
@@ -347,7 +346,13 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
           </div>
         </div>
       </motion.div>
-
+      {currBase64Img && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-2">Returned Image:</h3>
+          <img src={`data:image/png;base64,${currBase64Img}`} alt="Processed Drawing" className="border rounded-lg shadow-md" />
+        </div>
+      )
+    }
     </div>
   );
 };
