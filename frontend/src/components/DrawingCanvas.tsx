@@ -218,18 +218,16 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       } finally {
         const uploadFormData = new FormData();
         uploadFormData.append("original_image", blob, "original.jpg");
-
-        fetch(`data:image/png;base64,${currBase64Img}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-          }
-          return response.blob();
-        })
-        .then(base64Blob => {
-          uploadFormData.append("inference_image", base64Blob, "inference.jpg");
-
-          return axios.post(
+        // Convert the base64 image to a Blob
+        const byteString = atob(currBase64Img);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        const base64Blob = new Blob([ab], { type: "image/png" });
+        uploadFormData.append("inference_image", base64Blob, "inference.jpg");
+        return axios.post(
             `${import.meta.env.VITE_API_URL}/api/v1/images`,
             uploadFormData,
             {
@@ -238,9 +236,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
                 Authorization: `Bearer ${localStorage.getItem("access_token")}`,
               },
             }
-          );
-        })
-        .then(() => {
+          ).then(() => {
           // Tell parent to update the history
           onDrawingComplete(currBase64Img);
           enqueueSnackbar(t("drawing_saved"), { variant: "success" });
