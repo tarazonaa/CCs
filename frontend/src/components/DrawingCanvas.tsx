@@ -241,13 +241,16 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
           );
         })
         .then(() => {
+          // Tell parent to update the history
+          onDrawingComplete(currBase64Img);
           enqueueSnackbar(t("drawing_saved"), { variant: "success" });
         })
         .catch(error => {
           console.warn("Image upload failed:", error.message);
           enqueueSnackbar(t("error_saving_drawing"), { variant: "error" });
         });
-      }, "image/jpeg");
+      }
+    }, "image/jpeg");
   };
 
   useEffect(() => {

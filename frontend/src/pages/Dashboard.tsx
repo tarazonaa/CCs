@@ -37,17 +37,6 @@ const Dashboard: React.FC = () => {
     }
   }, [location.hash]);
 
-  const handleDrawingComplete = (imageData: string) => {
-    // const newDrawing: Drawing = {
-    //   id: Date.now().toString(),
-    //   imageData,
-    //   timestamp: new Date(),
-    //   prediction: '?',
-    //   confidence: 0,
-    // };
-    // setDrawings((prev) => [newDrawing, ...prev]);
-  };
-
   const clearHistory = () => {
     //   setDrawings([]);
   };
@@ -82,7 +71,8 @@ const Dashboard: React.FC = () => {
     },
   };
 
-  useEffect(() => {
+  // Fetch images data from the API on component mount
+  const fetchImagesData = () => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/api/v1/images`, {
         headers: {
@@ -102,6 +92,10 @@ const Dashboard: React.FC = () => {
       .catch((error) => {
         console.error("Error fetching images data:", error);
       });
+  };
+
+  useEffect(() => {
+    fetchImagesData();
   }, []);
 
   return (
@@ -193,7 +187,7 @@ const Dashboard: React.FC = () => {
               exit="exit"
             >
               <motion.div variants={itemVariants}>
-                <DrawingCanvas onDrawingComplete={handleDrawingComplete} />
+                <DrawingCanvas onDrawingComplete={fetchImagesData} />
               </motion.div>
             </motion.div>
           ) : (

@@ -136,6 +136,8 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
             {t("drawing_count", { count: imagesData.length })}
           </p>
         </div>
+        {/* 
+        Remove clear history button because we don't have that yet
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -144,7 +146,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
         >
           <Trash weight="bold" size={16} />
           <span>{t("clear_all")}</span>
-        </motion.button>
+        </motion.button> */}
       </div>
 
       {/* Grid of cards */}

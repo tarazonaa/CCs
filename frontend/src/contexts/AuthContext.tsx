@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type React from 'react'
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
-const authEndpoint = import.meta.env.VITE_AUTH_ENDPOINT
+const authEndpoint = import.meta.env.VITE_API_URL
 const provisionKey = import.meta.env.VITE_PROVISION_KEY
 
 interface User {
