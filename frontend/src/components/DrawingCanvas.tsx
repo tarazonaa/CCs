@@ -8,6 +8,7 @@ interface DrawingCanvasProps {
 const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [currBase64Img, setCurrBase64Img] = useState<string | null>(null);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
   useEffect(() => {
@@ -122,6 +123,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       try {
         const response = await axios.post('https://10.49.12.47:8443/api/v1/inference', formData);
         console.log('Upload success:', response.data);
+        setCurrBase64Img(response.data.segmentation_base64); // Assuming the response contains the image URL
       } catch (error: any) {
         console.error('Upload error:', error?.response?.data || error.message);
       }
@@ -165,6 +167,15 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
           Draw a digit (0-9) in the canvas above, then click "Save Drawing" to add it to your history.
         </p>
       </div>
+    {
+      // Returned image is a base64 string
+      currBase64Img && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-2">Returned Image:</h3>
+          <img src={`data:image/png;base64,${currBase64Img}`} alt="Processed Drawing" className="border rounded-lg shadow-md" />
+        </div>
+      )
+    }
     </div>
   );
 };
