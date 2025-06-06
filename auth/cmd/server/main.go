@@ -173,21 +173,7 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		origin := c.Request.Header.Get("Origin")
-
-		allowedOrigins := map[string]bool{
-			"http://localhost:5173":      true,
-			"http://127.0.0.1:3000":      true,
-			"http://localhost:3001":      true,
-
-		}
-
-		if allowedOrigins[origin] {
-			c.Header("Access-Control-Allow-Origin", origin)
-		} else {
-			c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
-		}
-
+		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		c.Header("Access-Control-Expose-Headers", "Content-Length")
