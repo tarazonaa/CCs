@@ -232,11 +232,21 @@ func (h *ImageHandler) GetImageByReceivedID(c *gin.Context) {
 }
 
 func (h *ImageHandler) GetUserImages(c *gin.Context) {
-	userIDStr := c.Param("user_id")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID format"})
+	userIDStr, exists := c.Get("authenticated_userid")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
 		return
+	}
+
+	userIDParsed, ok := userIDStr.(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("User id found: %s", userIDParsed)})
+		return
+	}
+
+	userID, err := uuid.Parse(userIDParsed)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Couldn't parse uuid"})
 	}
 
 	limit := 10
@@ -267,7 +277,7 @@ func (h *ImageHandler) GetUserImages(c *gin.Context) {
 		"total":   total,
 		"limit":   limit,
 		"offset":  offset,
-		"user_id": userID,
+		"user_id": userIDParsed,
 	})
 }
 
