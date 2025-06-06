@@ -140,10 +140,6 @@ func corsMiddleware() gin.HandlerFunc {
 
 		allowedOrigins := map[string]bool{
 			"*":                     true,
-			"http://localhost:3000": true,
-			"http://localhost:5173": true,
-			"http://127.0.0.1:3000": true,
-			"http://localhost:3001": true,
 		}
 
 		if allowedOrigins[origin] {

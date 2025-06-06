@@ -11,6 +11,11 @@ upstreams:
     targets:
       - target: 172.24.0.9:8000
 
+  - name: auth-upstream
+    algorithm: round-robin
+    targets:
+      - target: 172.24.0.189:8080
+
 services:
   - name: frontend-service
     host: frontend-upstream
@@ -26,6 +31,14 @@ services:
       - name: inference-route
         paths:
           - /api/v1/inference
+
+  - name: auth-service
+    host: auth-upstream
+    port: 8080
+    routes:
+      - name: auth-route
+        paths:
+          - /api/v1/auth
 
 plugins:
 - name: http-log
