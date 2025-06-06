@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface DrawingCanvasProps {
   onDrawingComplete: (imageData: string) => void;
@@ -64,9 +65,69 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   const saveDrawing = () => {
     if (!canvasRef.current) return;
     
-    const imageData = canvasRef.current.toDataURL();
-    onDrawingComplete(imageData);
+    let canvasImg = canvasRef.current.toDataURL();
+    onDrawingComplete(canvasImg);
+
+    const originalCanvas = canvasRef.current;
+
+    // Create a resized 112x112 canvas
+    const resizedCanvas = document.createElement('canvas');
+    resizedCanvas.width = 112;
+    resizedCanvas.height = 112;
+
+    const ctx = resizedCanvas.getContext('2d');
+    if (!ctx) {
+      console.error("Failed to get context for resized canvas");
+      return;
+    }
+
+    // Draw the original image resized
+    ctx.drawImage(originalCanvas, 0, 0, 112, 112);
+
+    // Get the pixel data
+    const imageData = ctx.getImageData(0, 0, 112, 112);
+    const data = imageData.data;
+
+    // Convert to grayscale and invert colors
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+
+      // Grayscale: average the RGB values
+      const gray = (r + g + b) / 3;
+
+      // Invert grayscale value (255 - gray)
+      const inverted = 255 - gray;
+
+      data[i] = inverted;     // Red
+      data[i + 1] = inverted; // Green
+      data[i + 2] = inverted; // Blue
+      // Alpha stays the same (data[i + 3])
+    }
+
+    // Put the processed image back to the canvas
+    ctx.putImageData(imageData, 0, 0);
+
+    // Export as JPEG and upload
+    resizedCanvas.toBlob(async (blob) => {
+      if (!blob) {
+        console.error("Failed to convert processed canvas to Blob.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', blob, 'processed.jpg');
+
+      try {
+        const response = await axios.post('https://10.49.12.47:8443/api/v1/inference', formData);
+        console.log('Upload success:', response.data);
+      } catch (error: any) {
+        console.error('Upload error:', error?.response?.data || error.message);
+      }
+    }, 'image/jpeg');
   };
+
 
   return (
     <div className="flex flex-col items-center space-y-8">

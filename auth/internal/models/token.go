@@ -10,14 +10,14 @@ import (
 )
 
 type OAuth2Token struct {
-	ID                  string `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	ID                  uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
 	AccessToken         string `json:"access_token" gorm:"uniqueIndex;not null"`
 	RefreshToken        string `json:"refresh_token,omitempty" gorm:"uniqueIndex"`
 	AccessTokenExpiration time.Time    `json:"access_token_expiration,omitempty"` 
 	RefreshTokenExpiration time.Time    `json:"refresh_token_expiration,omitempty"`
 	Scope               string `json:"scope,omitempty"`
 	AuthenticatedUserID string `json:"authenticated_userid,omitempty" gorm:"column:authenticated_userid"`
-	CredentialID        string `json:"credential_id" gorm:"not null;type:uuid"`
+	CredentialID        uuid.UUID `json:"credential_id" gorm:"not null;type:uuid"`
 	CreatedAt           int64  `json:"created_at"`
 
 	// Relación
@@ -29,8 +29,8 @@ func (OAuth2Token) TableName() string {
 }
 
 func (t *OAuth2Token) BeforeCreate(tx *gorm.DB) error {
-	if t.ID == "" {
-		t.ID = uuid.New().String()
+	if t.ID == uuid.Nil {
+		t.ID = uuid.New()
 	}
 	if t.AccessToken == "" {
 		t.AccessToken = generateRandomToken()
