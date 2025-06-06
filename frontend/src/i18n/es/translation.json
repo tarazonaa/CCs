@@ -31,6 +31,7 @@
   "clear_history": "Borrar historial",
   "create_account": "Crea tu cuenta",
   "full_name": "Nombre completo",
+  "username_placeholder": "Nombre de usuario",
   "full_name_placeholder": "Nombre completo",
   "confirm_password": "Confirma tu contraseña",
   "already_have_account": "¿Ya tienes una cuenta?"
