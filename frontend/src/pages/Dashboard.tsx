@@ -1,17 +1,18 @@
-import type React from "react";
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import DrawingCanvas from "@/components/DrawingCanvas";
 import DrawingHistory from "@/components/DrawingHistory";
+import { useAuth } from "@/contexts/AuthContext";
 import {
-  PencilSimple,
-  ClockCounterClockwise,
-  User,
   BracketsCurly,
+  ClockCounterClockwise,
+  PencilSimple,
+  User,
 } from "@phosphor-icons/react";
 import axios from "axios";
+import { AnimatePresence, motion } from "framer-motion";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 
 export interface ImageMetadata {
   sent_image_id: string;
@@ -24,6 +25,8 @@ const Dashboard: React.FC = () => {
   const [imagesData, setImagesData] = useState<ImageMetadata[]>([]);
   const [activeTab, setActiveTab] = useState<"draw" | "history">("draw");
   const location = useLocation();
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Check if URL hash is #history and update activeTab
@@ -112,10 +115,12 @@ const Dashboard: React.FC = () => {
         >
           <div>
             <h1 className="text-3xl font-semibold text-text-primary">
-              Dashboard
+              {t("dashboard_title")}
             </h1>
             <p className="text-text-secondary mt-1">
-              Welcome, {user?.username || "Artist"}
+              {t("welcome_user", {
+                name: user?.username || "artist",
+              })}
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -124,7 +129,7 @@ const Dashboard: React.FC = () => {
               className="flex items-center space-x-1 px-4 py-2 bg-primary text-black rounded-lg shadow-lg transition-all duration-300 hover:bg-primary/90 mt-3"
             >
               <User weight="bold" size={18} />
-              <span>Logout</span>
+              <span>{t("logout")}</span>
             </motion.button>
           </div>
 
@@ -141,7 +146,7 @@ const Dashboard: React.FC = () => {
                 }`}
               >
                 <PencilSimple weight="bold" size={18} />
-                <span>Draw</span>
+                <span>{t("tab_draw")}</span>
                 {activeTab === "draw" && (
                   <motion.div
                     layoutId="activeTab"
@@ -162,7 +167,7 @@ const Dashboard: React.FC = () => {
                 }`}
               >
                 <ClockCounterClockwise weight="bold" size={18} />
-                <span>History ({imagesData.length})</span>
+                <span>{t("tab_history", { count: imagesData.length })}</span>
                 {activeTab === "history" && (
                   <motion.div
                     layoutId="activeTab"

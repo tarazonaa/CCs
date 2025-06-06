@@ -4,6 +4,7 @@ import { Trash, ImageSquare } from "@phosphor-icons/react";
 import type { ImageMetadata } from "@/pages/Dashboard";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface DrawingHistoryProps {
   imagesData: ImageMetadata[];
@@ -19,6 +20,8 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
   // onDrawingClick
 }) => {
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchBlobs = async () => {
@@ -103,10 +106,10 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
             />
           </div>
           <h2 className="text-2xl font-semibold text-text-primary mb-3">
-            No drawings yet
+            {t("no_drawings_yet")}
           </h2>
           <p className="text-text-secondary mb-6">
-            Create your first drawing to see it appear here
+            {t("create_drawing_prompt")}
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -114,7 +117,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
             onClick={() => (window.location.hash = "")}
             className="btn btn-primary mx-auto"
           >
-            Start Drawing
+            {t("start_drawing_button")}
           </motion.button>
         </div>
       </motion.div>
@@ -127,10 +130,10 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-semibold text-text-primary">
-            Drawing History
+            {t("drawing_history_title")}
           </h2>
           <p className="text-text-secondary mt-1">
-            {imagesData.length} drawing{imagesData.length !== 1 ? "s" : ""}
+            {t("drawing_count", { count: imagesData.length })}
           </p>
         </div>
         <motion.button
@@ -140,7 +143,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
           className="btn flex items-center space-x-2 bg-error/10 hover:bg-error/20 text-error border-none"
         >
           <Trash weight="bold" size={16} />
-          <span>Clear All</span>
+          <span>{t("clear_all")}</span>
         </motion.button>
       </div>
 
@@ -159,7 +162,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
                   {/* Original Drawing */}
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-text-secondary">
-                      Original
+                      {t("original_label")}
                     </p>
                     <div className="bg-white rounded-lg p-2 shadow-sm">
                       <img
@@ -173,7 +176,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
                   {/* Segmentation */}
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-text-secondary">
-                      Segmentation
+                      {t("segmentation_label")}
                     </p>
                     <div className="bg-white rounded-lg p-2 shadow-sm">
                       <img
