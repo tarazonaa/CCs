@@ -1,6 +1,8 @@
 {
   "title": "Bienvenido {name}",
   "sign_in": "Por favor inicia sesión en tu cuenta",
+  "result": "Resultado",
+  "your_drawing": "Tu dibujo",
   "username": "Nombre de usuario",
   "email_address": "Correo electrónico",
   "password": "Contraseña",
