@@ -84,7 +84,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_AUTH_ENDPOINT}/api/v1/images`, {
+      .get(`${import.meta.env.VITE_API_URL}/api/v1/images`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },

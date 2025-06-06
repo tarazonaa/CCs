@@ -218,25 +218,36 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       } finally {
         const uploadFormData = new FormData();
         uploadFormData.append("original_image", blob, "original.jpg");
-        // Turn the base64 string into a Blob for upload
-        const base64Response = await fetch(
-          `data:image/png;base64,${currBase64Img}`,
-        );
-        const base64Blob = await base64Response.blob();
-        uploadFormData.append("inference_image", base64Blob, "inference.jpg");
-        await axios.post(
-          `${import.meta.env.VITE_AUTH_ENDPOINT}/api/v1/images`,
-          uploadFormData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
-          },
-        );
-        enqueueSnackbar(t("drawing_saved"), { variant: "success" });
-      }
-    }, "image/jpeg");
+
+        fetch(`data:image/png;base64,${currBase64Img}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+          }
+          return response.blob();
+        })
+        .then(base64Blob => {
+          uploadFormData.append("inference_image", base64Blob, "inference.jpg");
+
+          return axios.post(
+            `${import.meta.env.VITE_API_URL}/api/v1/images`,
+            uploadFormData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+              },
+            }
+          );
+        })
+        .then(() => {
+          enqueueSnackbar(t("drawing_saved"), { variant: "success" });
+        })
+        .catch(error => {
+          console.warn("Image upload failed:", error.message);
+          enqueueSnackbar(t("error_saving_drawing"), { variant: "error" });
+        });
+      }, "image/jpeg");
   };
 
   useEffect(() => {

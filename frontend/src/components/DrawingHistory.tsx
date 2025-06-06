@@ -32,7 +32,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
           try {
             const [sentBlob, receivedBlob] = await Promise.all([
               axios.get(
-                `${import.meta.env.VITE_AUTH_ENDPOINT}/api/v1/images/blob/${img.sent_image_id}`,
+                `${import.meta.env.VITE_API_URL}/api/v1/images/blob/${img.sent_image_id}`,
                 {
                   headers: {
                     Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -41,7 +41,7 @@ const DrawingHistory: React.FC<DrawingHistoryProps> = ({
                 },
               ),
               axios.get(
-                `${import.meta.env.VITE_AUTH_ENDPOINT}/api/v1/images/blob/${img.received_image_id}`,
+                `${import.meta.env.VITE_API_URL}/api/v1/images/blob/${img.received_image_id}`,
                 {
                   headers: {
                     Authorization: `Bearer ${localStorage.getItem("access_token")}`,
