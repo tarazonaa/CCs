@@ -58,7 +58,7 @@ func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
 	if token.IsRefreshable() {
 		c.JSON(http.StatusOK, gin.H{
 			"active":  true,
-			"refresh": true,
+			"should_refresh": true,
 			"exp":     token.AccessTokenExpiration.Unix(),
 		})
 		return

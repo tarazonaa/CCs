@@ -43,7 +43,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const { data } = await axios.post(`${authEndpoint}/oauth2/introspect`, { token })
-      if (data.active) {
+      if (data.should_refresh) {
+        const newToken = await refreshToken()
+        if (newToken) {
+          setUser({
+            id: data.authenticated_userid,
+            email: data.email,
+            name: data.name,
+            username: data.username,
+          })
+        }
+      } else if (data.active) {
         setUser({
           id: data.authenticated_userid,
           email: data.email,
