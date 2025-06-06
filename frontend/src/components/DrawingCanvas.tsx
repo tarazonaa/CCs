@@ -1,4 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { useSnackbar } from 'notistack';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 interface DrawingCanvasProps {
@@ -8,8 +10,10 @@ interface DrawingCanvasProps {
 const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [currBase64Img, setCurrBase64Img] = useState<string | null>(null);
+  const [currBase64Img, setCurrBase64Img] = useState<string>("");
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -122,10 +126,23 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
 
       try {
         const response = await axios.post('https://10.49.12.47:8443/api/v1/inference', formData);
-        console.log('Upload success:', response.data);
         setCurrBase64Img(response.data.segmentation_base64); // Assuming the response contains the image URL
       } catch (error: any) {
         console.error('Upload error:', error?.response?.data || error.message);
+      } finally {
+        const uploadFormData = new FormData();
+        uploadFormData.append('original_image', blob, 'original.jpg');
+        // Turn the base64 string into a Blob for upload
+        const base64Response = await fetch(`data:image/png;base64,${currBase64Img}`);
+        const base64Blob = await base64Response.blob();
+        uploadFormData.append('inference_image', base64Blob, 'inference.jpg');
+        await axios.post(`${import.meta.env.VITE_AUTH_ENDPOINT}/api/v1/images`, uploadFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',  
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          },
+        });
+        enqueueSnackbar(t('drawing_saved'), { variant: 'success' });
       }
     }, 'image/jpeg');
   };
