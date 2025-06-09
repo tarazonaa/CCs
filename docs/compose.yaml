@@ -1,0 +1,9 @@
+services:
+  swagger-ui:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./swagger.json:/usr/share/nginx/html/swagger.json
+    environment:
+      - SWAGGER_JSON=/swagger.json
