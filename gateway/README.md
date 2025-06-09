@@ -75,7 +75,11 @@ services:
 ### Production Routes
 The routes that were used during the assessment were stored under the VCS in
 `config/kong.prod.yaml`, but in essence moving from the dummy endpoints to the
-"real" services was a very straight-forward task.
+"real" services was a very straight-forward task. However, to avoid unnecessary
+overheads, since we were creating small VMs for each service, Kong was installed
+directly to the prod VM (instead of using a container). Refer to the [Kong Gateway
+docs](https://docs.konghq.com/gateway/3.10.x/install/linux/debian/) for further
+instructions.
 
 ## Logging
 Since Kong Gateway doesn't have a MongoDB plugin for logs, we used the HTTP log plugin
