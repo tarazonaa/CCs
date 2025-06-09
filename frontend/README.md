@@ -44,6 +44,7 @@ Notistack for toast notifications
 Custom Components with motion and accessibility features
 
 # Project Structure
+```
 src/
 ├── components/
 │   ├── DrawingCanvas.tsx          # Main drawing interface
@@ -71,7 +72,7 @@ src/
 └── styles/
 |    └── globals.css                # Global styles and CSS variables
 ├── App.tsx 
-
+```
 
 # API Integration
 Authentication Endpoints
