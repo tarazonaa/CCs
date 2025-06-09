@@ -1,0 +1,716 @@
+definitions:
+  models.Consumer:
+    properties:
+      created_at:
+        type: string
+      custom_id:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.OAuth2Credential:
+    properties:
+      client_id:
+        type: string
+      client_secret:
+        type: string
+      consumer:
+        allOf:
+        - $ref: '#/definitions/models.Consumer'
+        description: Relación
+      consumer_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      redirect_uris:
+        items:
+          type: string
+        type: array
+    type: object
+  models.OAuth2Token:
+    properties:
+      access_token:
+        type: string
+      access_token_expiration:
+        type: string
+      authenticated_userid:
+        type: string
+      created_at:
+        type: integer
+      credential:
+        allOf:
+        - $ref: '#/definitions/models.OAuth2Credential'
+        description: Relación
+      credential_id:
+        type: string
+      id:
+        type: string
+      refresh_token:
+        type: string
+      refresh_token_expiration:
+        type: string
+      scope:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/authorize:
+    get:
+      consumes:
+      - application/json
+      description: Returns the OAuth2 authorization page or JSON for a given client_id
+      parameters:
+      - description: Client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      - description: OAuth2 scope
+        in: query
+        name: scope
+        type: string
+      produces:
+      - application/json
+      - text/html
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Show OAuth2 authorization page
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Revokes the access token and logs out the user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a user account with email, password, username, and name
+      parameters:
+      - description: User registration object
+        in: body
+        name: user
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            name:
+              type: string
+            password:
+              type: string
+            username:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
+  /images:
+    get:
+      description: Lists all images, optionally filtered by user_id, with pagination
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all images
+      tags:
+      - images
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads original and inference images, creates a record for the
+        user
+      parameters:
+      - description: Original image file
+        in: formData
+        name: original_image
+        required: true
+        type: file
+      - description: Inference image file
+        in: formData
+        name: inference_image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create an image record and upload images
+      tags:
+      - images
+  /images/{id}:
+    delete:
+      description: Deletes image by ID for the authenticated user
+      parameters:
+      - description: Image ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an image
+      tags:
+      - images
+    get:
+      description: Returns the image metadata for the given image ID
+      parameters:
+      - description: Image ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get image by UUID
+      tags:
+      - images
+  /images/blob/{id}:
+    get:
+      description: Returns the image file as binary
+      parameters:
+      - description: Image ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get image blob by ID
+      tags:
+      - images
+  /images/received/{received_image_id}:
+    get:
+      description: Returns image metadata by received image UUID
+      parameters:
+      - description: Received Image ID
+        in: path
+        name: received_image_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get image by received image ID
+      tags:
+      - images
+  /images/sent/{sent_image_id}:
+    get:
+      description: Returns image metadata by sent image UUID
+      parameters:
+      - description: Sent Image ID
+        in: path
+        name: sent_image_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get image by sent image ID
+      tags:
+      - images
+  /images/user:
+    get:
+      description: Returns paginated images for the current user
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all images for authenticated user
+      tags:
+      - images
+  /minio/images/{id}:
+    get:
+      description: Fetches an image from MinIO storage by object ID
+      parameters:
+      - description: Object ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get image from MinIO by ID
+      tags:
+      - minio
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads an image for a given ID to MinIO storage
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image file to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Store image in MinIO
+      tags:
+      - minio
+  /oauth2/authorize:
+    get:
+      consumes:
+      - application/json
+      description: Handles OAuth2 authorization requests (GET & POST)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OAuth2 Authorize
+      tags:
+      - oauth2
+    post:
+      consumes:
+      - application/json
+      description: Handles OAuth2 authorization requests (GET & POST)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OAuth2 Authorize
+      tags:
+      - oauth2
+  /oauth2/introspect:
+    post:
+      consumes:
+      - application/json
+      description: Checks if a token is valid and returns token/user info
+      parameters:
+      - description: Token to introspect
+        in: body
+        name: token
+        required: true
+        schema:
+          properties:
+            token:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Introspect token
+      tags:
+      - oauth2
+  /oauth2/token:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      - application/json
+      description: Issues OAuth2 tokens (access/refresh) for a client
+      parameters:
+      - description: Grant type
+        in: formData
+        name: grant_type
+        required: true
+        type: string
+      - description: Client ID
+        in: formData
+        name: client_id
+        type: string
+      - description: Client Secret
+        in: formData
+        name: client_secret
+        type: string
+      - description: Authorization code
+        in: formData
+        name: code
+        type: string
+      - description: Redirect URI
+        in: formData
+        name: redirect_uri
+        type: string
+      - description: Refresh token
+        in: formData
+        name: refresh_token
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OAuth2 token endpoint
+      tags:
+      - oauth2
+  /oauth2/tokens:
+    post:
+      consumes:
+      - application/json
+      description: Create a new OAuth2 token with access, refresh token, and expiration
+        details
+      parameters:
+      - description: OAuth2 Token creation payload
+        in: body
+        name: token
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.OAuth2Token'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Method Not Allowed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create an OAuth2 token
+      tags:
+      - oauth2
+  /oauth2/tokens/{token_id}:
+    delete:
+      description: Delete a specific OAuth2 token by ID
+      parameters:
+      - description: Token ID
+        in: path
+        name: token_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a token by ID
+      tags:
+      - oauth2
+swagger: "2.0"

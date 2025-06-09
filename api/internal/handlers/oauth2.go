@@ -30,7 +30,17 @@ func NewOAuth2Handler(oauth2Service *services.OAuth2Service, db *gorm.DB, cfg *c
 	}
 }
 
-// Function to handle introspection (check if the token is valid)
+// IntrospectToken godoc
+// @Summary      Introspect token
+// @Description  Checks if a token is valid and returns token/user info
+// @Tags         oauth2
+// @Accept       json
+// @Produce      json
+// @Param        token  body  object{token=string}  true  "Token to introspect"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]interface{}
+// @Failure      401  {object}  map[string]interface{}
+// @Router       /oauth2/introspect [post]
 func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
 	var req struct {
 		Token string `json:"token" binding: "required"`
@@ -92,6 +102,21 @@ func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
 	})
 }
 
+// OAuth2Authorize godoc
+// @Summary      OAuth2 authorization endpoint
+// @Description  Handles OAuth2 authorization requests
+// @Tags         oauth2
+// @Accept       application/x-www-form-urlencoded
+// @Produce      json
+// @Param        response_type  formData  string  true  "Response type"
+// @Param        client_id      formData  string  true  "Client ID"
+// @Param        redirect_uri   formData  string  true  "Redirect URI"
+// @Param        scope          formData  string  false "Scope"
+// @Param        state          formData  string  false "State"
+// @Success      302  {string}  string  "Redirects to client"
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Router       /oauth2/authorize [get]
 func (h *OAuth2Handler) OAuth2Authorize(c *gin.Context) {
 	var req services.AuthorizeRequest
 
@@ -111,11 +136,25 @@ func (h *OAuth2Handler) OAuth2Authorize(c *gin.Context) {
 		return
 	}
 
-	// CAMBIO PRINCIPAL: Hacer redirect HTTP en lugar de devolver JSON
 	c.Redirect(http.StatusFound, response.RedirectURI)
 }
 
-// OAuth2Token handles POST /oauth2/token
+// OAuth2Token godoc
+// @Summary      OAuth2 token endpoint
+// @Description  Issues OAuth2 tokens (access/refresh) for a client
+// @Tags         oauth2
+// @Accept       application/x-www-form-urlencoded,application/json
+// @Produce      json
+// @Param        grant_type     formData  string  true  "Grant type"
+// @Param        client_id      formData  string  false "Client ID"
+// @Param        client_secret  formData  string  false "Client Secret"
+// @Param        code           formData  string  false "Authorization code"
+// @Param        redirect_uri   formData  string  false "Redirect URI"
+// @Param        refresh_token  formData  string  false "Refresh token"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]interface{}
+// @Failure      401  {object}  map[string]interface{}
+// @Router       /oauth2/token [post]
 func (h *OAuth2Handler) OAuth2Token(c *gin.Context) {
 	var req services.TokenRequest
 
@@ -168,7 +207,27 @@ func (h *OAuth2Handler) OAuth2Token(c *gin.Context) {
 	c.JSON(http.StatusOK, tokenResponse)
 }
 
-// OAuth2Tokens handles GET/POST /oauth2_tokens
+// ListOAuth2Tokens godoc
+// @Summary      List OAuth2 tokens
+// @Description  Retrieve all OAuth2 tokens, optionally filtered by service_id
+// @Tags         oauth2
+// @Produce      json
+// @Param        service_id  query  string  false  "Service ID"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      405  {object}  map[string]string
+// @Router       /oauth2/tokens [get]
+
+// CreateOAuth2Token godoc
+// @Summary      Create an OAuth2 token
+// @Description  Create a new OAuth2 token with access, refresh token, and expiration details
+// @Tags         oauth2
+// @Accept       json
+// @Produce      json
+// @Param        token  body  object  true  "OAuth2 Token creation payload"
+// @Success      201  {object}  models.OAuth2Token
+// @Failure      400  {object}  map[string]string
+// @Failure      405  {object}  map[string]string
+// @Router       /oauth2/tokens [post]
 func (h *OAuth2Handler) OAuth2Tokens(c *gin.Context) {
 	switch c.Request.Method {
 	case "GET":
@@ -180,7 +239,40 @@ func (h *OAuth2Handler) OAuth2Tokens(c *gin.Context) {
 	}
 }
 
-// OAuth2TokenByID handles individual token operations
+// GetOAuth2TokenByID godoc
+// @Summary      Get a token by ID
+// @Description  Retrieve a specific OAuth2 token by ID
+// @Tags         oauth2
+// @Produce      json
+// @Param        token_id  path  string  true  "Token ID"
+// @Success      200  {object}  models.OAuth2Token
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /oauth2/tokens/{token_id} [get]
+
+// UpdateOAuth2TokenByID godoc
+// @Summary      Update a token by ID
+// @Description  Update fields of a specific OAuth2 token by ID
+// @Tags         oauth2
+// @Accept       json
+// @Produce      json
+// @Param        token_id  path  string  true  "Token ID"
+// @Param        updates   body  object  true  "Fields to update (partial allowed)"
+// @Success      200  {object}  models.OAuth2Token
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /oauth2/tokens/{token_id} [put]
+
+// DeleteOAuth2TokenByID godoc
+// @Summary      Delete a token by ID
+// @Description  Delete a specific OAuth2 token by ID
+// @Tags         oauth2
+// @Produce      json
+// @Param        token_id  path  string  true  "Token ID"
+// @Success      204  "No Content"
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /oauth2/tokens/{token_id} [delete]
 func (h *OAuth2Handler) OAuth2TokenByID(c *gin.Context) {
 	tokenID := c.Param("token_id")
 	if tokenID == "" {
@@ -335,6 +427,13 @@ func (h *OAuth2Handler) sendTokenError(c *gin.Context, errorCode, description st
 	})
 }
 
+// ValidateToken godoc
+// @Summary      Middleware to validate OAuth2 tokens
+// @Description  Checks for a valid Bearer token in the Authorization header. Aborts with 401 if the token is missing, invalid, or expired. Sets user and token info in Gin context on success.
+// @Tags         oauth2
+// @Security     ApiKeyAuth
+// @Produce      json
+// @Failure      401  {object}  map[string]string
 func (h *OAuth2Handler) ValidateToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")

@@ -105,6 +105,12 @@ func setupRouter(oauth2Handler *handlers.OAuth2Handler, authHandler *handlers.Au
 	router.Use(gin.Recovery())
 	router.Use(corsMiddleware())
 
+	// @Summary      Health check
+	// @Description  Returns service health status and timestamp
+	// @Tags         system
+	// @Produce      json
+	// @Success      200  {object}  map[string]interface{}
+	// @Router       /health [get]
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":    "healthy",
@@ -260,7 +266,7 @@ func createClient(c *gin.Context) {
 		Name         string    `json:"name" binding:"required"`
 		ClientID     string    `json:"client_id"`
 		ClientSecret string    `json:"client_secret"`
-		RedirectURIs []string  `json:"redirect_uris" binding:"required"`
+		RedirectURIs []string  `json:"redirect_uris" binding:"required" swaggertype:"array,string"`
 		ConsumerID   uuid.UUID `json:"consumer_id" binding:"required"`
 	}
 

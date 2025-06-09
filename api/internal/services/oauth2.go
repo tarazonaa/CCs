@@ -72,6 +72,14 @@ type TokenResponse struct {
 	Scope        string `json:"scope,omitempty"`
 }
 
+// @Summary      OAuth2 Authorize
+// @Description  Handles OAuth2 authorization requests (GET & POST)
+// @Tags         oauth2
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Router       /oauth2/authorize [get]
+// @Router       /oauth2/authorize [post]
 func (s *OAuth2Service) Authorize(req *AuthorizeRequest) (*AuthorizeResponse, error) {
 	log.Printf("DEBUG: Received provision_key: '%s'", req.ProvisionKey)
 	log.Printf("DEBUG: Expected provision_key: '%s'", s.config.ProvisionKey)

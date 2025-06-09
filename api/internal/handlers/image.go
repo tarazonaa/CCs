@@ -24,6 +24,19 @@ func NewImageHandler(imageService *services.ImageService, minioClient *minio.Cli
 	}
 }
 
+// CreateImage godoc
+// @Summary      Create an image record and upload images
+// @Description  Uploads original and inference images, creates a record for the user
+// @Tags         images
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        original_image   formData  file   true  "Original image file"
+// @Param        inference_image  formData  file   true  "Inference image file"
+// @Success      201  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /images [post]
 func (h *ImageHandler) CreateImage(c *gin.Context) {
 	userIDStr := c.GetString("authenticated_userid")
 	if userIDStr == "" {
@@ -100,6 +113,16 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 	})
 }
 
+// GetBlobFromID godoc
+// @Summary      Get image blob by ID
+// @Description  Returns the image file as binary
+// @Tags         images
+// @Produce      image/png
+// @Param        id  path  string  true  "Image ID"
+// @Success      200  {file}  file
+// @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /images/blob/{id} [get]
 func (h *ImageHandler) GetBlobFromID(c *gin.Context) {
 	imageID := c.Param("id")
 	objectName := fmt.Sprintf("%s.png", imageID)
@@ -125,6 +148,18 @@ func (h *ImageHandler) GetBlobFromID(c *gin.Context) {
 	io.Copy(c.Writer, obj)
 }
 
+// GetAllImages godoc
+// @Summary      List all images
+// @Description  Lists all images, optionally filtered by user_id, with pagination
+// @Tags         images
+// @Produce      json
+// @Param        user_id  query  string  false  "User ID"
+// @Param        limit    query  int     false  "Limit"
+// @Param        offset   query  int     false  "Offset"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /images [get]
 func (h *ImageHandler) GetAllImages(c *gin.Context) {
 	// Parse query parameters
 	var userID *uuid.UUID
@@ -168,6 +203,16 @@ func (h *ImageHandler) GetAllImages(c *gin.Context) {
 	})
 }
 
+// GetImageByID godoc
+// @Summary      Get image by UUID
+// @Description  Returns the image metadata for the given image ID
+// @Tags         images
+// @Produce      json
+// @Param        id  path  string  true  "Image ID"
+// @Success      200  {object}  object
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /images/{id} [get]
 func (h *ImageHandler) GetImageByID(c *gin.Context) {
 	imageIDStr := c.Param("id")
 	imageID, err := uuid.Parse(imageIDStr)
@@ -189,6 +234,16 @@ func (h *ImageHandler) GetImageByID(c *gin.Context) {
 	c.JSON(http.StatusOK, image)
 }
 
+// GetImageBySentID godoc
+// @Summary      Get image by sent image ID
+// @Description  Returns image metadata by sent image UUID
+// @Tags         images
+// @Produce      json
+// @Param        sent_image_id  path  string  true  "Sent Image ID"
+// @Success      200  {object}  object
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /images/sent/{sent_image_id} [get]
 func (h *ImageHandler) GetImageBySentID(c *gin.Context) {
 	sentImageIDStr := c.Param("sent_image_id")
 	sentImageID, err := uuid.Parse(sentImageIDStr)
@@ -210,6 +265,16 @@ func (h *ImageHandler) GetImageBySentID(c *gin.Context) {
 	c.JSON(http.StatusOK, image)
 }
 
+// GetImageByReceivedID godoc
+// @Summary      Get image by received image ID
+// @Description  Returns image metadata by received image UUID
+// @Tags         images
+// @Produce      json
+// @Param        received_image_id  path  string  true  "Received Image ID"
+// @Success      200  {object}  object
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /images/received/{received_image_id} [get]
 func (h *ImageHandler) GetImageByReceivedID(c *gin.Context) {
 	receivedImageIDStr := c.Param("received_image_id")
 	receivedImageID, err := uuid.Parse(receivedImageIDStr)
@@ -231,6 +296,17 @@ func (h *ImageHandler) GetImageByReceivedID(c *gin.Context) {
 	c.JSON(http.StatusOK, image)
 }
 
+// GetUserImages godoc
+// @Summary      Get all images for authenticated user
+// @Description  Returns paginated images for the current user
+// @Tags         images
+// @Produce      json
+// @Param        limit   query  int  false  "Limit"
+// @Param        offset  query  int  false  "Offset"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /images/user [get]
 func (h *ImageHandler) GetUserImages(c *gin.Context) {
 	userIDStr, exists := c.Get("authenticated_userid")
 	if !exists {
@@ -281,6 +357,17 @@ func (h *ImageHandler) GetUserImages(c *gin.Context) {
 	})
 }
 
+// DeleteImage godoc
+// @Summary      Delete an image
+// @Description  Deletes image by ID for the authenticated user
+// @Tags         images
+// @Param        id  path  string  true  "Image ID"
+// @Success      204  "No Content"
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /images/{id} [delete]
 func (h *ImageHandler) DeleteImage(c *gin.Context) {
 
 	userIDStr := c.GetString("authenticated_userid")
