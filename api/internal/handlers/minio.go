@@ -20,6 +20,18 @@ func NewMinioHandler(minioService *services.MinioService) *MinioHandler {
 	}
 }
 
+// StoreImage godoc
+// @Summary      Store image in MinIO
+// @Description  Uploads an image for a given ID to MinIO storage
+// @Tags         minio
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        id    path     string  true  "ID"
+// @Param        file  formData file    true  "Image file to upload"
+// @Success      201   {object} map[string]interface{}
+// @Failure      400   {object} map[string]string
+// @Failure      500   {object} map[string]string
+// @Router       /minio/images/{id} [post]
 func (h *MinioHandler) StoreImage(c *gin.Context) {
 	id := c.Param("id")
 
@@ -60,6 +72,16 @@ func (h *MinioHandler) StoreImage(c *gin.Context) {
 	})
 }
 
+// GetImageByID godoc
+// @Summary      Get image from MinIO by ID
+// @Description  Fetches an image from MinIO storage by object ID
+// @Tags         minio
+// @Produce      image/png
+// @Param        id  path  string  true  "Object ID"
+// @Success      200  {file}  file
+// @Failure      404  {object} map[string]string
+// @Failure      500  {object} map[string]string
+// @Router       /minio/images/{id} [get]
 func (h *MinioHandler) GetImageByID(c *gin.Context) {
 	id := c.Param("id")
 	object, err := h.MinioService.MinioClient.GetObject(

@@ -28,7 +28,7 @@ type OAuth2Credential struct {
 	Name         string         `json:"name" gorm:"not null"`
 	ClientID     string         `json:"client_id" gorm:"uniqueIndex;not null"`
 	ClientSecret string         `json:"client_secret" gorm:"not null"`
-	RedirectURIs pq.StringArray `json:"redirect_uris" gorm:"type:text[]"`
+	RedirectURIs pq.StringArray `json:"redirect_uris" gorm:"type:text[]" swaggertype:"array,string"`
 	ConsumerID   uuid.UUID      `json:"consumer_id" gorm:"not null;type:uuid"`
 	CreatedAt    time.Time      `json:"created_at"`
 

@@ -16,6 +16,18 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 	return &AuthHandler{db: db}
 }
 
+// ShowAuthorizationPage godoc
+// @Summary      Show OAuth2 authorization page
+// @Description  Returns the OAuth2 authorization page or JSON for a given client_id
+// @Tags         auth
+// @Accept       json
+// @Produce      json,html
+// @Param        client_id  query     string  true  "Client ID"
+// @Param        scope      query     string  false "OAuth2 scope"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /auth/authorize [get]
 func (h *AuthHandler) ShowAuthorizationPage(c *gin.Context) {
 	clientID := c.Query("client_id")
 	scope := c.Query("scope")
@@ -51,6 +63,18 @@ func (h *AuthHandler) ShowAuthorizationPage(c *gin.Context) {
 	}
 }
 
+// Register godoc
+// @Summary      Register a new user
+// @Description  Creates a user account with email, password, username, and name
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        user  body   object{email=string,password=string,username=string,name=string}  true  "User registration object"
+// @Success      201  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      409  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req struct {
 		Email    string `json:"email" binding:"required"`
@@ -89,7 +113,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	})
 }
 
-
+// Logout godoc
+// @Summary      Logout user
+// @Description  Revokes the access token and logs out the user
+// @Tags         auth
+// @Security     ApiKeyAuth
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// Get access token from the request
 	accessToken := c.GetHeader("Authorization")

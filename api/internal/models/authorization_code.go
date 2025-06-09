@@ -15,7 +15,7 @@ type AuthorizationCode struct {
 	ClientID            string         `json:"client_id" gorm:"not null"`
 	UserID              uuid.UUID      `json:"user_id" gorm:"not null"`
 	RedirectURI         string         `json:"redirect_uri" gorm:"not null"`
-	Scopes              pq.StringArray `json:"scopes" gorm:"type:text[]"`
+	Scopes              pq.StringArray `json:"scopes" gorm:"type:text[]" swaggertype:"array,string"`
 	CodeChallenge       string         `json:"-"`
 	CodeChallengeMethod string         `json:"-"`
 	ExpiresAt           time.Time      `json:"expires_at"`
