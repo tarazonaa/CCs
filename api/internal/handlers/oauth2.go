@@ -57,9 +57,9 @@ func (h *OAuth2Handler) IntrospectToken(c *gin.Context) {
 
 	if token.IsRefreshable() {
 		c.JSON(http.StatusOK, gin.H{
-			"active":  true,
+			"active":         true,
 			"should_refresh": true,
-			"exp":     token.AccessTokenExpiration.Unix(),
+			"exp":            token.AccessTokenExpiration.Unix(),
 		})
 		return
 	}
@@ -224,12 +224,12 @@ func (h *OAuth2Handler) createToken(c *gin.Context) {
 		Credential struct {
 			ID uuid.UUID `json:"id" binding:"required"`
 		} `json:"credential" binding:"required"`
-		AccessToken         string `json:"access_token"`
-		RefreshToken        string `json:"refresh_token"`
-		AccessTokenExpiration int    `json:"access_token_expiration"`
+		AccessToken            string `json:"access_token"`
+		RefreshToken           string `json:"refresh_token"`
+		AccessTokenExpiration  int    `json:"access_token_expiration"`
 		RefreshTokenExpiration int    `json:"refresh_token_expiration"`
-		Scope               string `json:"scope"`
-		AuthenticatedUserID string `json:"authenticated_userid"`
+		Scope                  string `json:"scope"`
+		AuthenticatedUserID    string `json:"authenticated_userid"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -238,13 +238,13 @@ func (h *OAuth2Handler) createToken(c *gin.Context) {
 	}
 
 	token := &models.OAuth2Token{
-		AccessToken:         req.AccessToken,
-		RefreshToken:        req.RefreshToken,
-		AccessTokenExpiration: utils.GetCurrentTS().Add(time.Duration(req.AccessTokenExpiration) * time.Second),
+		AccessToken:            req.AccessToken,
+		RefreshToken:           req.RefreshToken,
+		AccessTokenExpiration:  utils.GetCurrentTS().Add(time.Duration(req.AccessTokenExpiration) * time.Second),
 		RefreshTokenExpiration: utils.GetCurrentTS().Add(time.Duration(req.RefreshTokenExpiration) * time.Second),
-		Scope:               req.Scope,
-		AuthenticatedUserID: req.AuthenticatedUserID,
-		CredentialID:        req.Credential.ID,
+		Scope:                  req.Scope,
+		AuthenticatedUserID:    req.AuthenticatedUserID,
+		CredentialID:           req.Credential.ID,
 	}
 
 	if err := h.db.Create(token).Error; err != nil {
