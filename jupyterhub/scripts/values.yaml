@@ -1,8 +1,7 @@
 proxy:
   service:
-    public:
-      type: LoadBalancer
-      loadBalancerIP: <IP>
-      externalTrafficPolicy: Cluster  # or Local, depending on your requirements
-      ports:
-        http: 80
+    type: NodePort
+    nodePorts:
+      http: 30080
+      https: 30443
+  secretToken: ""
