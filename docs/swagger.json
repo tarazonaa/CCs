@@ -1,0 +1,1083 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/auth/authorize": {
+            "get": {
+                "description": "Returns the OAuth2 authorization page or JSON for a given client_id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json",
+                    "text/html"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Show OAuth2 authorization page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "OAuth2 scope",
+                        "name": "scope",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Revokes the access token and logs out the user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "Creates a user account with email, password, username, and name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User registration object",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "email": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "password": {
+                                    "type": "string"
+                                },
+                                "username": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/images": {
+            "get": {
+                "description": "Lists all images, optionally filtered by user_id, with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "List all images",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Uploads original and inference images, creates a record for the user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Create an image record and upload images",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Original image file",
+                        "name": "original_image",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Inference image file",
+                        "name": "inference_image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/images/blob/{id}": {
+            "get": {
+                "description": "Returns the image file as binary",
+                "produces": [
+                    "image/png"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Get image blob by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Image ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/images/received/{received_image_id}": {
+            "get": {
+                "description": "Returns image metadata by received image UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Get image by received image ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Received Image ID",
+                        "name": "received_image_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/images/sent/{sent_image_id}": {
+            "get": {
+                "description": "Returns image metadata by sent image UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Get image by sent image ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sent Image ID",
+                        "name": "sent_image_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/images/user": {
+            "get": {
+                "description": "Returns paginated images for the current user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Get all images for authenticated user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/images/{id}": {
+            "get": {
+                "description": "Returns the image metadata for the given image ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Get image by UUID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Image ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes image by ID for the authenticated user",
+                "tags": [
+                    "images"
+                ],
+                "summary": "Delete an image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Image ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/minio/images/{id}": {
+            "get": {
+                "description": "Fetches an image from MinIO storage by object ID",
+                "produces": [
+                    "image/png"
+                ],
+                "tags": [
+                    "minio"
+                ],
+                "summary": "Get image from MinIO by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Object ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Uploads an image for a given ID to MinIO storage",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "minio"
+                ],
+                "summary": "Store image in MinIO",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Image file to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth2/authorize": {
+            "get": {
+                "description": "Handles OAuth2 authorization requests (GET \u0026 POST)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "oauth2"
+                ],
+                "summary": "OAuth2 Authorize",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Handles OAuth2 authorization requests (GET \u0026 POST)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "oauth2"
+                ],
+                "summary": "OAuth2 Authorize",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth2/introspect": {
+            "post": {
+                "description": "Checks if a token is valid and returns token/user info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "oauth2"
+                ],
+                "summary": "Introspect token",
+                "parameters": [
+                    {
+                        "description": "Token to introspect",
+                        "name": "token",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth2/token": {
+            "post": {
+                "description": "Issues OAuth2 tokens (access/refresh) for a client",
+                "consumes": [
+                    "application/x-www-form-urlencoded",
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "oauth2"
+                ],
+                "summary": "OAuth2 token endpoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Grant type",
+                        "name": "grant_type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client Secret",
+                        "name": "client_secret",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authorization code",
+                        "name": "code",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Redirect URI",
+                        "name": "redirect_uri",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Refresh token",
+                        "name": "refresh_token",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth2/tokens": {
+            "post": {
+                "description": "Create a new OAuth2 token with access, refresh token, and expiration details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "oauth2"
+                ],
+                "summary": "Create an OAuth2 token",
+                "parameters": [
+                    {
+                        "description": "OAuth2 Token creation payload",
+                        "name": "token",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.OAuth2Token"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Method Not Allowed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth2/tokens/{token_id}": {
+            "delete": {
+                "description": "Delete a specific OAuth2 token by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "oauth2"
+                ],
+                "summary": "Delete a token by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token ID",
+                        "name": "token_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Consumer": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "custom_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.OAuth2Credential": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "client_secret": {
+                    "type": "string"
+                },
+                "consumer": {
+                    "description": "Relación",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Consumer"
+                        }
+                    ]
+                },
+                "consumer_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "redirect_uris": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "models.OAuth2Token": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "access_token_expiration": {
+                    "type": "string"
+                },
+                "authenticated_userid": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "credential": {
+                    "description": "Relación",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.OAuth2Credential"
+                        }
+                    ]
+                },
+                "credential_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "refresh_token_expiration": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
