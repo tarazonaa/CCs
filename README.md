@@ -46,4 +46,12 @@ Finalmente, se tuvieron 7 máquinas virtuales para los despliegues, como sigue:
 
 ## Redes
 
+Para tener conectividad con la red del Campus, el equipo tuvo acceso a un Router que se conectaba directamente hacia la red, y se tuvo que configurar NAT en el gateway (salida hacia la red) y PAT overload en dicho router para exponer el punto de entrada de la aplicación (gateway de Kong). 
+En términos de seguridad, se instauró un certificado de SSL en el API Gateway para tener acceso a comunicación a través de HTTPS desde y hacia la red del Tec, asegurando que las comunicaciones "externas" a la nube fueran cifradas.
+Por otra parte, la forma en la que se comunicaban los servicios internos era a través de sus IP asignadas dentro de la nube privada en sus respectivas máquinas de despliegue, mientras que el frontend y el backend tenían una comunicación a través de Kong para poder hacer registro de las peticiones, como ya fue mencionado. 
+
 ## Pruebas realizadas
+
+1. Para el front y back-end, se realizaron pruebas A/B para corroborar el funcionamiento del balanceo de cargas, ya que, como se menciona en la arquitectura, cada uno de estos servicios contaba con dos instancias de cómputo virtuales. 
+
+2. Casi todas las pruebas realizadas fueron de modo local por los desarrolladores, haciendo uso de herramientas como Docker para poder levantar los servicios necesarios en determinado momento (bases de datos, APIs, etc), además de realizar pruebas de conectividad desde la red del Tec al frontend días antes de la presentación.
