@@ -27,3 +27,7 @@ WantedBy=multi-user.target
 ```
 
 The unit file assumes that there is a venv that is used to start `uvicorn`.
+
+Also, if you refer to the architecture diagram, you'll see that the GPU Lab is considered a VPC, this is due
+to the fact that On-Prem, the Cloud and GPU Lab are in different VLANs and we had to configure a router to 
+allow their communication.
