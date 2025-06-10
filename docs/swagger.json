@@ -4,7 +4,7 @@
         "contact": {}
     },
     "paths": {
-        "/auth/authorize": {
+        "/api/v1/auth/authorize": {
             "get": {
                 "description": "Returns the OAuth2 authorization page or JSON for a given client_id",
                 "consumes": [
@@ -62,14 +62,14 @@
                 }
             }
         },
-        "/auth/logout": {
+        "/api/v1/auth/logout": {
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "bearerAuth": []
                     }
                 ],
-                "description": "Revokes the access token and logs out the user",
+                "description": "Revokes the access token using the auth bearer and logs out the user",
                 "produces": [
                     "application/json"
                 ],
@@ -108,7 +108,7 @@
                 }
             }
         },
-        "/auth/register": {
+        "/api/v1/auth/register": {
             "post": {
                 "description": "Creates a user account with email, password, username, and name",
                 "consumes": [
@@ -184,8 +184,13 @@
                 }
             }
         },
-        "/images": {
+        "/api/v1/images": {
             "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Lists all images, optionally filtered by user_id, with pagination",
                 "produces": [
                     "application/json"
@@ -243,6 +248,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Uploads original and inference images, creates a record for the user",
                 "consumes": [
                     "multipart/form-data"
@@ -308,8 +318,13 @@
                 }
             }
         },
-        "/images/blob/{id}": {
+        "/api/v1/images/blob/{id}": {
             "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Returns the image file as binary",
                 "produces": [
                     "image/png"
@@ -355,8 +370,13 @@
                 }
             }
         },
-        "/images/received/{received_image_id}": {
+        "/api/v1/images/received/{received_image_id}": {
             "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Returns image metadata by received image UUID",
                 "produces": [
                     "application/json"
@@ -402,8 +422,13 @@
                 }
             }
         },
-        "/images/sent/{sent_image_id}": {
+        "/api/v1/images/sent/{sent_image_id}": {
             "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Returns image metadata by sent image UUID",
                 "produces": [
                     "application/json"
@@ -449,8 +474,13 @@
                 }
             }
         },
-        "/images/user": {
+        "/api/v1/images/user": {
             "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Returns paginated images for the current user",
                 "produces": [
                     "application/json"
@@ -502,8 +532,13 @@
                 }
             }
         },
-        "/images/{id}": {
+        "/api/v1/images/{id}": {
             "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Returns the image metadata for the given image ID",
                 "produces": [
                     "application/json"
@@ -549,6 +584,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Deletes image by ID for the authenticated user",
                 "tags": [
                     "images"
@@ -606,8 +646,13 @@
                 }
             }
         },
-        "/minio/images/{id}": {
+        "/api/v1/minio/images/{id}": {
             "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Fetches an image from MinIO storage by object ID",
                 "produces": [
                     "image/png"
@@ -653,6 +698,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Uploads an image for a given ID to MinIO storage",
                 "consumes": [
                     "multipart/form-data"
@@ -709,7 +759,7 @@
                 }
             }
         },
-        "/oauth2/authorize": {
+        "/api/v1/oauth2/authorize": {
             "get": {
                 "description": "Handles OAuth2 authorization requests (GET \u0026 POST)",
                 "consumes": [
@@ -733,6 +783,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Handles OAuth2 authorization requests (GET \u0026 POST)",
                 "consumes": [
                     "application/json"
@@ -755,7 +810,7 @@
                 }
             }
         },
-        "/oauth2/introspect": {
+        "/api/v1/oauth2/introspect": {
             "post": {
                 "description": "Checks if a token is valid and returns token/user info",
                 "consumes": [
@@ -809,7 +864,7 @@
                 }
             }
         },
-        "/oauth2/token": {
+        "/api/v1/oauth2/token": {
             "post": {
                 "description": "Issues OAuth2 tokens (access/refresh) for a client",
                 "consumes": [
@@ -887,7 +942,7 @@
                 }
             }
         },
-        "/oauth2/tokens": {
+        "/api/v1/oauth2/tokens": {
             "post": {
                 "description": "Create a new OAuth2 token with access, refresh token, and expiration details",
                 "consumes": [
@@ -939,8 +994,13 @@
                 }
             }
         },
-        "/oauth2/tokens/{token_id}": {
+        "/api/v1/oauth2/tokens/{token_id}": {
             "delete": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "description": "Delete a specific OAuth2 token by ID",
                 "produces": [
                     "application/json"
@@ -982,6 +1042,55 @@
                     }
                 }
             }
+        },
+        "/api/v1/api/v1/inference": {
+          "post": {
+            "summary": "Perform image segmentation inference",
+            "description": "Accepts a 112x112 grayscale image and returns a segmentation mask as a base64-encoded PNG image.",
+            "tags": ["inference"],
+            "requestBody": {
+              "content": {
+                "multipart/form-data": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "image": {
+                        "type": "string",
+                        "format": "binary",
+                        "description": "Grayscale image file (112x112 pixels)"
+                      }
+                    },
+                    "required": ["image"]
+                  }
+                }
+              },
+              "required": true
+            },
+            "responses": {
+              "200": {
+                "description": "Segmentation result",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "segmentation_base64": {
+                          "type": "string",
+                          "description": "Base64-encoded PNG segmentation mask"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "Invalid input image"
+              },
+              "500": {
+                "description": "Internal server error"
+              }
+            }
+          }
         }
     },
     "definitions": {
